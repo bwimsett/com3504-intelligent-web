@@ -5,21 +5,33 @@
  */
 
 var app = require('../app');
-var debug = require('debug')('com3504-intelligent-web:server');
+var debug = require('debug')('progressiveapp:server');
 var http = require('http');
+// var https = require('https');
+var fs = require('fs-extra');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(process.env.PORT || '3001');
 app.set('port', port);
+console.log("server ready on port "+port);
 
 /**
- * Create HTTP server.
+ * Create HTTPs server.
  */
+var options = {
+    key: fs.readFileSync('./private_access/ca.key'),
+    cert: fs.readFileSync('./private_access/ca.crt')
+};
 
+/**
+ * Create HTTPs server using the options
+ */
+// var server = https.createServer(options, app);
 var server = http.createServer(app);
+
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -50,7 +62,7 @@ function normalizePort(val) {
 }
 
 /**
- * Event listener for HTTP server "error" event.
+ * Event listener for HTTPs server "error" event.
  */
 
 function onError(error) {
@@ -78,7 +90,7 @@ function onError(error) {
 }
 
 /**
- * Event listener for HTTP server "listening" event.
+ * Event listener for HTTPs server "listening" event.
  */
 
 function onListening() {
