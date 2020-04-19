@@ -13,40 +13,41 @@
  */
 var dbPromise;
 
-const FORECAST_DB_NAME= 'db_forecasts_1';
-const FORECAST_STORE_NAME= 'store_forecasts';
+const STORIES_DB_NAME= 'db_stories_1';
+const STORY_STORE_NAME= 'store_stories';
 
 /**
  * it inits the database
  */
 function initDatabase(){
-    dbPromise = idb.openDb(FORECAST_DB_NAME, 1, function (upgradeDb) {
-        if (!upgradeDb.objectStoreNames.contains(FORECAST_STORE_NAME)) {
-            var forecastDB = upgradeDb.createObjectStore(FORECAST_STORE_NAME, {keyPath: 'id', autoIncrement: true});
-            forecastDB.createIndex('location', 'location', {unique: false, multiEntry: true});
+    dbPromise = idb.openDb(STORIES_DB_NAME, 1, function (upgradeDb) {
+        if (!upgradeDb.objectStoreNames.contains(STORY_STORE_NAME)) {
+            var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: 'id', autoIncrement: true});
+            storyDB.createIndex('location', 'location', {unique: false, multiEntry: true});
         }
     });
 }
 /**
- * it saves the forecasts for a city in localStorage
- * @param city
- * @param forecastObject
+ * it saves the stories for a user in localStorage
+ * @param user
+ * @param storyObject
  */
-function storeCachedData(city, forecastObject) {
-    console.log('inserting: '+JSON.stringify(forecastObject));
+function storeCachedData(user, storyObject) {
+    console.log('inserting: '+JSON.stringify(storyObject));
+    // Attempt to use Indexed DB
     if (dbPromise) {
         dbPromise.then(async db => {
-            var tx = db.transaction(FORECAST_STORE_NAME, 'readwrite');
-            var store = tx.objectStore(FORECAST_STORE_NAME);
-            await store.put(forecastObject);
+            var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(STORY_STORE_NAME);
+            await store.put(storyObject);
             return tx.complete;
         }).then(function () {
-            console.log('added item to the store! '+ JSON.stringify(forecastObject));
+            console.log('added item to the store! '+ JSON.stringify(storyObject));
         }).catch(function (error) {
-            localStorage.setItem(city, JSON.stringify(forecastObject));
+            localStorage.setItem(user, JSON.stringify(storyObject));
         });
-    }
-    else localStorage.setItem(city, JSON.stringify(forecastObject));
+    } // Otherwise us localstorage
+    else localStorage.setItem(user, JSON.stringify(storyObject));
 }
 
 
@@ -60,8 +61,8 @@ function getCachedData(city, date) {
     if (dbPromise) {
         dbPromise.then(function (db) {
             console.log('fetching: '+city);
-            var tx = db.transaction(FORECAST_STORE_NAME, 'readonly');
-            var store = tx.objectStore(FORECAST_STORE_NAME);
+            var tx = db.transaction(STORY_STORE_NAME, 'readonly');
+            var store = tx.objectStore(STORY_STORE_NAME);
             var index = store.index('location');
             return index.getAll(IDBKeyRange.only(city));
         }).then(function (readingsList) {
@@ -86,6 +87,16 @@ function getCachedData(city, date) {
     }
 }
 
+
+/**
+ * Given story data, return the text
+ * @param dataR data returned by the server
+ */
+function getStoryText(dataR){
+    if(dataR.text == null && dataR.text === undefined)
+        return "[NO TEXT FOR THIS STORY]";
+    return dataR.text;
+}
 
 /**
  * given the server data, it returns the value of the field precipitations

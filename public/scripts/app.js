@@ -9,8 +9,8 @@ const SNOWY = 4;
  * called by the HTML onload
  * showing any cached forecast data and declaring the service worker
  */
-function initWeatherForecasts() {
-    loadData();
+function initStories() {
+    //loadData();
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
             .register('./service-worker.js')
@@ -155,6 +155,29 @@ function selectCity(city, date) {
     retrieveAllCitiesData(cityList, date);
 }
 
+/**
+ * @param text
+ */
+class Story{
+    constructor(text){
+        this.text = text;
+    }
+}
+
+/**
+ * Creates a new post from the form and stores it in the database
+ */
+function createPost(){
+    var postList = JSON.parse(localStorage.getItem('posts'));
+    if(postList == null){
+        postList = [];
+    }
+    var formContents = $('#textfield').val();
+    var newPost = new Story(formContents);
+    console.log("creating post with text: "+formContents);
+    postList.push(newPost)
+    localStorage.setItem('posts', JSON.stringify(postList));
+}
 
 
 /**

@@ -21,7 +21,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="canonical" href="https://weather-pwa-sample.firebaseapp.com/final/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media Site</title>
+    <title>Stories</title>
     <link rel="stylesheet" href="/styles/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="styles/inline.css">
 
@@ -41,43 +41,15 @@
     <!-- Latest compiled JavaScript -->
     <script src="/scripts/bootstrap.min.js"></script>
 </head>
-<body onload="">
-<div class="container" style="width: 100%">
-    <div class="row">
-        <div class="col-xs-10"><h1><%= title %></h1></div>
-        <div class="col-xs-2">
-            <div class="form-group">
-                <h1>
-                    <button class="btn btn-primary btn-lg buttonField roundishShape " id="swap_button"
-                            onclick="loadData()">
-                        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-                    </button>
-                    <button class="btn btn-primary btn-lg buttonField roundishShape " id="swap_button"
-                            onclick="showCityList()">
-                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                    </button>
-                </h1>
-                <div class="list-group pop_up_list" id='city_list' style="display:none">
-                    <button class="list-group-item " onclick="selectCity('London', new Date().getTime());">London
-                    </button>
-                    <button class="list-group-item" onclick="selectCity('Madrid', new Date().getTime());">Madrid
-                    </button>
-                    <button class="list-group-item" onclick="selectCity('Paris', new Date().getTime());">Paris</button>
-                    <button class="list-group-item" onclick="selectCity('Rome', new Date().getTime());">Rome</button>
-                </div>
+<body onload="initStories()">
+    <h2>Stories</h2>
+    <form>
+        <textarea id="textfield" rows="10" cols="50"></textarea>
+        <br>
+        <button onclick="createPost()">Create Post</button>
+    </form>
 
-            </div>
-        </div>
-    </div>
-    <div class="offline_div" id="offline_div" style="display: none">You are offline</div>
-</div>
-<div id="results" style="text-align: center">
 
-</div>
-</div>
-</div>
-
-</div>
 <script src="/scripts/app.js"></script>
 <script src="/scripts/database.js"></script>
 

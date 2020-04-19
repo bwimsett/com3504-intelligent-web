@@ -6,6 +6,16 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Weather Forecast' });
 });
 
+/* GET Stories page */
+router.get('/stories', function(req, res, next){
+   res.render('stories');
+});
+
+/* POST Story data */
+router.post('/stories', function(req, res, next){
+
+});
+
 /**
  *  POST the data about the weather.
  *  parameters in body:
@@ -17,7 +27,6 @@ router.post('/weather_data', function(req, res, next) {
     const forecast= getWeatherForecast(req.body.location, req.body.date);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(forecast));
-
 });
 
 
