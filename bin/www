@@ -6,8 +6,7 @@
 
 var app = require('../app');
 var debug = require('debug')('progressiveapp:server');
-var http = require('http');
-// var https = require('https');
+var https = require('https');
 var fs = require('fs-extra');
 
 /**
@@ -30,7 +29,7 @@ var options = {
  * Create HTTPs server using the options
  */
 // var server = https.createServer(options, app);
-var server = http.createServer(app);
+var server = https.createServer(options, app);
 
 
 /**

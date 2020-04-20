@@ -28,21 +28,23 @@ function initDatabase(){
     });
 }
 /**
- * it saves the stories for a user in localStorage
- * @param user
+ * saves a story to indexed db, or local storage if that fails
  * @param storyObject
  */
-function storeCachedData(user, storyObject) {
+function storeCachedData(storyObject) {
     console.log('inserting: '+JSON.stringify(storyObject));
     // Attempt to use Indexed DB
     if (dbPromise) {
+        // Try pushing to indexed db
         dbPromise.then(async db => {
             var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
             var store = tx.objectStore(STORY_STORE_NAME);
             await store.put(storyObject);
             return tx.complete;
+            // Then output success
         }).then(function () {
             console.log('added item to the store! '+ JSON.stringify(storyObject));
+            // If there's an error. store the item in local storage
         }).catch(function (error) {
             localStorage.setItem(user, JSON.stringify(storyObject));
         });
@@ -52,19 +54,19 @@ function storeCachedData(user, storyObject) {
 
 
 /**
- * it retrieves the forecasts data for a city from the database
+ * it retrieves the list of stories from the database
  * @param city
  * @param date
  * @returns {*}
  */
-function getCachedData(city, date) {
+function getCachedData() {
     if (dbPromise) {
         dbPromise.then(function (db) {
             console.log('fetching: '+city);
             var tx = db.transaction(STORY_STORE_NAME, 'readonly');
             var store = tx.objectStore(STORY_STORE_NAME);
-            var index = store.index('location');
-            return index.getAll(IDBKeyRange.only(city));
+            var stories = store.getAll();
+            return stories;
         }).then(function (readingsList) {
             if (readingsList && readingsList.length>0){
                 var max;

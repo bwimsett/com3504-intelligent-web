@@ -89,6 +89,90 @@ function loadCityData(city, date){
         document.getElementById('city_list').style.display = 'none';
 }
 
+/**
+ * given one city and a date, it queries the server via Ajax to get the latest
+ * posts
+ * if the request to the server fails, it shows the data stored in the database
+ * @param city
+ * @param date
+ */
+function loadPosts(){
+    $.ajax({
+        url: '/stories',
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            // no need to JSON parse the result, as we are using
+            // dataType:json, so JQuery knows it and unpacks the
+            // object for us before returning it
+
+            // Display the output on the screen
+
+            addToResults(dataR);
+
+            //  Update the database with the new data, as it is online
+            //storeCachedData(dataR);
+
+            // Hide the offline alert
+            if (document.getElementById('offline_div')!=null)
+                document.getElementById('offline_div').style.display='none';
+        },
+        // the request to the server has failed. Let's show the cached data
+        error: function (xhr, status, error) {
+            showOfflineWarning();
+            getCachedData(city, date);
+            const dvv= document.getElementById('offline_div');
+            if (dvv!=null)
+                dvv.style.display='block';
+        }
+    });
+    // hide the list of cities if currently shown
+    if (document.getElementById('city_list')!=null)
+        document.getElementById('city_list').style.display = 'none';
+}
+
+function sendStory(story){
+    const data = JSON.stringify({text: story.text});
+
+    $.ajax({
+        url: '/stories_list',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            // no need to JSON parse the result, as we are using
+            // dataType:json, so JQuery knows it and unpacks the
+            // object for us before returning it
+
+            // Display the output on the screen
+            console.log("response received");
+            addToResults(dataR);
+
+
+            //  Update the database with the new data, as it is online
+            //storeCachedData(dataR);
+
+            // Hide the offline alert
+            if (document.getElementById('offline_div')!=null)
+                document.getElementById('offline_div').style.display='none';
+        },
+        // the request to the server has failed. Let's show the cached data
+        error: function (xhr, status, error) {
+            showOfflineWarning();
+            console.log("ajax post failed",error);
+            //getCachedData(city, date);
+            const dvv= document.getElementById('offline_div');
+            if (dvv!=null)
+                dvv.style.display='block';
+        }
+    });
+    // hide the list of cities if currently shown
+    if (document.getElementById('city_list')!=null)
+        document.getElementById('city_list').style.display = 'none';
+
+    event.preventDefault();
+}
+
 
 ///////////////////////// INTERFACE MANAGEMENT ////////////
 
@@ -109,24 +193,21 @@ function loadCityData(city, date){
   *}
  */
 function addToResults(dataR) {
-    if (document.getElementById('results') != null) {
-        const row = document.createElement('div');
+    console.log("updating results");
+
+    var resultsDiv = $('#results');
+
+    if (resultsDiv != null) {
+        const row = document.createElement("div");
         // appending a new row
         document.getElementById('results').appendChild(row);
         // formatting the row by applying css classes
-        row.classList.add('card');
-        row.classList.add('my_card');
-        row.classList.add('bg-faded');
+        row.classList.add("card");
+        row.classList.add("my_card");
+        row.classList.add("bg-faded");
         // the following is far from ideal. we should really create divs using javascript
         // rather than assigning innerHTML
-        row.innerHTML = "<div class='card-block'>" +
-            "<div class='row'>" +
-            "<div class='col-xs-2'><h4 class='card-title'>" + dataR.location + "</h4></div>" +
-            "<div class='col-xs-2'>" + getForecast(dataR.forecast) + "</div>" +
-            "<div class='col-xs-2'>" + getTemperature(dataR) + "</div>" +
-            "<div class='col-xs-2'>" + getPrecipitations(dataR) + "</div>" +
-            "<div class='col-xs-2'>" + getWind(dataR) + "</div>" +
-            "<div class='col-xs-2'></div></div></div>";
+        row.innerHTML = "<div class=\"card-block\">" + dataR.text + "</div>";
     }
 }
 
@@ -165,7 +246,7 @@ class Story{
 }
 
 /**
- * Creates a new post from the form and stores it in the database
+ * Creates a new post from the form and stores it in local storage
  */
 function createPost(){
     var postList = JSON.parse(localStorage.getItem('posts'));
@@ -177,6 +258,9 @@ function createPost(){
     console.log("creating post with text: "+formContents);
     postList.push(newPost)
     localStorage.setItem('posts', JSON.stringify(postList));
+    // Create ajax request to send new story and refresh page
+    sendStory(newPost);
+    return false;
 }
 
 
