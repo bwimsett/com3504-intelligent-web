@@ -23,7 +23,7 @@ function initDatabase(){
     dbPromise = idb.openDb(STORIES_DB_NAME, 1, function (upgradeDb) {
         if (!upgradeDb.objectStoreNames.contains(STORY_STORE_NAME)) {
             var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: 'id', autoIncrement: true});
-            storyDB.createIndex('location', 'location', {unique: false, multiEntry: true});
+            storyDB.createIndex('text', 'text', {unique: false, multiEntry: true});
         }
     });
 }
@@ -40,6 +40,7 @@ function storeCachedData(storyObject) {
             var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
             var store = tx.objectStore(STORY_STORE_NAME);
             await store.put(storyObject);
+            console.log("added to indexdb")
             return tx.complete;
             // Then output success
         }).then(function () {
@@ -47,6 +48,7 @@ function storeCachedData(storyObject) {
             // If there's an error. store the item in local storage
         }).catch(function (error) {
             localStorage.setItem(user, JSON.stringify(storyObject));
+            console.log("added to local storage")
         });
     } // Otherwise us localstorage
     else localStorage.setItem(user, JSON.stringify(storyObject));
@@ -62,10 +64,11 @@ function storeCachedData(storyObject) {
 function getCachedData() {
     if (dbPromise) {
         dbPromise.then(function (db) {
-            console.log('fetching: '+city);
+            console.log('fetching: '+ stories);
             var tx = db.transaction(STORY_STORE_NAME, 'readonly');
             var store = tx.objectStore(STORY_STORE_NAME);
             var stories = store.getAll();
+            var index = store.index('text');
             return stories;
         }).then(function (readingsList) {
             if (readingsList && readingsList.length>0){
