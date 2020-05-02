@@ -19,9 +19,8 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="canonical" href="https://weather-pwa-sample.firebaseapp.com/final/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Media Site</title>
+    <title> PWA Project</title>
     <link rel="stylesheet" href="/styles/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="styles/inline.css">
 
@@ -30,7 +29,7 @@
     <!-- Add to home screen for Safari on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Weather PWA">
+    <meta name="apple-mobile-web-app-title" content="Project PWA">
     <link rel="apple-touch-icon" href="images/icons/icon-152x152.png">
     <meta name="msapplication-TileImage" content="images/icons/icon-144x144.png">
     <meta name="msapplication-TileColor" content="#2F3BA2">
@@ -45,32 +44,22 @@
 <div class="container" style="width: 100%">
     <div class="row">
         <div class="col-xs-10"><h1><%= title %></h1></div>
-        <div class="col-xs-2">
-            <div class="form-group">
-                <h1>
-                    <button class="btn btn-primary btn-lg buttonField roundishShape " id="swap_button"
-                            onclick="loadData()">
-                        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-                    </button>
-                    <button class="btn btn-primary btn-lg buttonField roundishShape " id="swap_button"
-                            onclick="showCityList()">
-                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                    </button>
-                </h1>
-                <div class="list-group pop_up_list" id='city_list' style="display:none">
-                    <button class="list-group-item " onclick="selectCity('London', new Date().getTime());">London
-                    </button>
-                    <button class="list-group-item" onclick="selectCity('Madrid', new Date().getTime());">Madrid
-                    </button>
-                    <button class="list-group-item" onclick="selectCity('Paris', new Date().getTime());">Paris</button>
-                    <button class="list-group-item" onclick="selectCity('Rome', new Date().getTime());">Rome</button>
-                </div>
-
-            </div>
-        </div>
     </div>
+
+    <div class="bodywrapper">
+        <section class="buttonwrapper">
+            <div class="signup">
+                <h1>Not a member?</h1>
+                <h2><a href="/signup">Sign Up</a></h2>
+            </div>
+            <div class="login">
+                <h1>Already a member?</h1>
+                <h2><a href="/login">Log In</a></h2>
+            </div>
+        </section>
     <div class="offline_div" id="offline_div" style="display: none">You are offline</div>
 </div>
+
 <div id="results" style="text-align: center">
 
 </div>

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var dataCacheName = 'weatherData-v1';
-var cacheName = 'weatherPWA-step-8-1';
+var dataCacheName = 'projectData-v1';
+var cacheName = 'projectPWA-step-8-1';
 var filesToCache = [
     '/',
     '/scripts/app.js',
@@ -83,8 +83,8 @@ self.addEventListener('activate', function (e) {
  */
 self.addEventListener('fetch', function (event) {
     console.log('[Service Worker] Fetch', event.request.url);
-    var dataUrl = '/weather_data';
-    //if the request is '/weather_data', post to the server
+    var dataUrl = '/project_data';
+    //if the request is '/project_data', post to the server
     if (event.request.url.indexOf(dataUrl) > -1) {
         /*
          * When the request URL contains dataUrl, the app is asking for fresh
@@ -103,7 +103,7 @@ self.addEventListener('fetch', function (event) {
     } else {
         /*
          * The app is asking for app shell files. In this scenario the app uses the
-         * "Cache, then if netowrk available, it will refresh the cache
+         * "Cache, then if network is available, it will refresh the cache
          * see stale-while-revalidate at
          * https://jakearchibald.com/2014/offline-cookbook/#on-activate
          */
