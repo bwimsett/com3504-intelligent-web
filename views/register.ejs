@@ -40,26 +40,19 @@
     <!-- Latest compiled JavaScript -->
     <script src="/scripts/bootstrap.min.js"></script>
 </head>
-<body onload="">
+<body onload="initStories()">
 
 <div class="container" style="width: 100%">
     <div class="row">
-        <div class="col-xs-10"><h1><%= title %></h1></div>
+            <div class="col-xs-10"><h1>Register</h1></div>
     </div>
-
-
-    <div class="bodywrapper">
-        <section class="buttonwrapper">
-            <div class="signup">
-                <h1>Not a member?</h1>
-                <h2><a href="/register">Sign Up</a></h2>
-            </div>
-            <div class="login">
-                <h1>Already a member?</h1>
-                <h2><a href="/login">Log In</a></h2>
-            </div>
-        </section>
-    <div class="offline_div" id="offline_div" style="display: none">You are offline</div>
+    <form id="regform"  onsubmit="return false;">
+      <label for="username">Username:</label><br>
+      <input type="text" id="username" name="username" value=""><br>
+      <label for="password">Password:</label><br>
+      <input type="password" id="password" name="password" value=""><br><br>
+      <button id="registerButton" onclick=register()>Register</button>
+    </form>
 </div>
 
 <div id="results" style="text-align: center">

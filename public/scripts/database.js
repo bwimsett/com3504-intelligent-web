@@ -11,6 +11,7 @@ var dbPromise;
 
 const STORIES_DB_NAME= 'db_stories_1';
 const STORY_STORE_NAME= 'store_stories';
+const USER_STORE_NAME= 'store_users';
 
 /**
  * Initialise the database.
@@ -20,9 +21,11 @@ function initDatabase(){
         if (!upgradeDb.objectStoreNames.contains(STORY_STORE_NAME)) {
             var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: 'id', autoIncrement: true});
             storyDB.createIndex('text', 'text', {unique: false, multiEntry: true});
+            var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: 'username'});
         }
     });
 }
+
 
 /**
  * saves a single story to indexed db, or local storage if that fails
@@ -43,7 +46,7 @@ function cacheData(storyObject) {
         }).then(function () {
             console.log('added item to the store! '+ JSON.stringify(storyObject));
             // If there's an error. store the item in local storage
-        }).catch(function (error) {
+        }).catch(function () {
             localStorage.setItem(user, JSON.stringify(storyObject));
             console.log("added to local storage")
         });
@@ -51,6 +54,42 @@ function cacheData(storyObject) {
     else localStorage.setItem(user, JSON.stringify(storyObject));
 }
 
+function addUserData(user){
+    if (dbPromise) {
+        dbPromise.then(async db  => {
+            console.log('fetching: '+login);
+            var tx = db.transaction(USER_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(USER_STORE_NAME);
+            await store.put(user); // necessary as it returns a promise
+            return tx.complete;
+        }).then(function () {
+            alert("user added")
+            console.log("register success");
+        });
+    }
+}
+
+function findUser(userObj){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            console.log('fetching: '+login);
+            var tx = db.transaction(USER_STORE_NAME, 'readonly');
+            var store = tx.objectStore(USER_STORE_NAME);
+            return store.get(userObj.username);
+        }).then(function (foundObject) {
+            if (foundObject && (foundObject.username==userObj.username &&
+                foundObject.password==userObj.password)){
+
+                console.log("login success");
+                alert("logged in")
+                localStorage.setItem('currentUser',foundObject.username);
+
+            } else {
+                alert("login or password incorrect")
+            }
+        });
+    }
+}
 
 /**
  * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)

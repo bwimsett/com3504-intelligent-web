@@ -207,6 +207,13 @@ class Story{
     }
 }
 
+class User{
+    constructor(username, password){
+        this.username = username;
+        this.password = password;
+    }
+}
+
 /**
  * Creates a new post from the form and stores it in local storage
  */
@@ -225,6 +232,94 @@ function createPost(){
     return false;
 }
 
+function register() {
+
+    var userList=JSON.parse(localStorage.getItem('users'));
+    if (userList==null) userList=[];
+    var fdata = document.getElementById("regform");
+    var user = new User(fdata.username, fdata.password);
+    userList.push(user);
+    console.log("register "+fdata);
+    userList = removeDuplicates(userList);
+    localStorage.setItem('users', JSON.stringify(userList));
+    addUser(user);
+}
+
+function loggedIn(){
+    var currentUser=JSON.parse(localStorage.getItem('currentUser'));
+    return (currentUser==null)
+}
+
+function login() {
+    console.log("trying to login fdata.... " + fdata);
+    alert("lddddd")
+    var currentUser=JSON.parse(localStorage.getItem('currentUser'));
+    var fdata = document.getElementById("logform");
+    var user = new User(fdata.username, fdata.password);
+
+    if (!loggedIn()) {
+
+
+        loginUser(user);
+    }else{
+        console.log("already logged in.... " + fdata);
+    }
+}
+
+
+function addUser(user){
+    var data = JSON.stringify(user);
+    $.ajax({
+        url: '/register',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+
+            // Cache the data for offline viewing
+            addUserData(dataR);
+            // Display the output on the screen
+            console.log("response received registering ----");
+        },
+
+        // the request to the server has failed. Display the cached data instead.
+        error: function (xhr, status, error) {
+            console.log("ajax post failed",error);
+        }
+    });
+}
+
+function loginUser(user){
+    var data = JSON.stringify(user);
+    $.ajax({
+        url: '/login',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+
+            findUser(dataR);
+            // Display the output on the screen
+            console.log("response received logging in ----");
+        },
+
+        // the request to the server has failed. Display the cached data instead.
+        error: function (xhr, status, error) {
+            console.log("ajax post failed",error);
+        }
+    });
+}
+
+
+
+function removeDuplicates(list) {
+    // remove any duplicate
+    var uniqueNames=[];
+    $.each(list, function(i, el){
+        if($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
+    });
+    return uniqueNames;
+}
 
 /**
  * When the client goes offline, show an offline warning for the user

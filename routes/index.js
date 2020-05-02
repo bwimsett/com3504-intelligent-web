@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: ' PWA Project' });
@@ -8,7 +9,13 @@ router.get('/', function(req, res, next) {
 
 /* GET Stories page */
 router.get('/stories', function(req, res, next){
-   res.render('stories');
+    res.render('stories');
+});
+
+/* GET register page */
+router.get('/register', function(req, res, next){
+    res.render('register');
+
 });
 
 /* POST Story data */
@@ -17,6 +24,19 @@ router.post('/stories_list', function(req, res, next){
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(story));
 });
+
+router.post('/login', function(req, res, next){
+    const user = new Story(req.body.username, req.body.password);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(user));
+});
+
+router.post('/register', function(req, res, next){
+    const user = new Story(req.body.username, req.body.password);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(user));
+});
+
 
 function randomIntFromInterval(min,max) {
     return Math.floor(Math.random()*(max-min+1)+min);
@@ -28,6 +48,13 @@ function randomIntFromInterval(min,max) {
 class Story{
     constructor(text){
         this.text = text;
+    }
+}
+
+class User{
+    constructor(username, password){
+        this.username = username;
+        this.password = password;
     }
 }
 
