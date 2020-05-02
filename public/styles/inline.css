@@ -317,10 +317,6 @@ body {
     color: white;
     background-color: #3f51b5; }
 
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
 
 a {
   color: #00B7FF;
@@ -342,6 +338,8 @@ a {
 }
 
 body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   font-family: sans-serif;
   max-width: 100vw;
   min-height: 100vh;

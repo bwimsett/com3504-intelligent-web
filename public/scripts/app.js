@@ -150,7 +150,7 @@ function sendStory(story){
 
 
             //  Update the database with the new data, as it is online
-            storeCachedData(dataR);
+            //storeCachedData(dataR);
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)
