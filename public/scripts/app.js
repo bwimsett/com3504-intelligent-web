@@ -7,9 +7,12 @@ const SNOWY = 4;
 
 /**
  * called by the HTML onload
- * showing any cached forecast data and declaring the service worker
+ * showing any cached stories and declaring the service worker
  */
 function initStories() {
+    // First load the data.
+    // This is uncommented until the database is fully implemented.
+
     //loadData();
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
@@ -31,70 +34,64 @@ function initStories() {
 }
 
 /**
- * given the list of cities created by the user, it will retrieve all the data from
- * the server (or failing that) from the database
+ * given a list of users, retrieve all the data from the server (or failing that) from the database.
  */
 function loadData(){
-    var cityList=JSON.parse(localStorage.getItem('cities'));
-    cityList=removeDuplicates(cityList);
-    retrieveAllCitiesData(cityList, new Date().getTime());
+    // optional: Retrieve data set from localstorage? E.g. stories from specific users
+    var userList = JSON.parse(localStorage.getItem('[LOCALSTORAGE KEY]'));
+    retrieveAllStoryData(userList, new Date().getTime());
 }
 
 /**
- * it cycles through the list of cities and requests the data from the server for each
- * city
- * @param cityList the list of the cities the user has requested
- * @param date the date for the forecasts (not in use)
+ * Cycles through the list of users and requests a story (or stories) from the server for each
+ * user.
  */
-function retrieveAllCitiesData(cityList, date){
-    refreshCityList();
-    for (index in cityList)
-        loadCityData(cityList[index], date);
+function retrieveAllStoryData(userList){
+    for (index in userList)
+        loadUserStories(userList[index]);
 }
 
 /**
- * given one city and a date, it queries the server via Ajax to get the latest
- * weather forecast for that city
- * if the request to the server fails, it shows the data stored in the database
- * @param city
- * @param date
+ * Given a user, returns a single story. Could be adapted for multiple stories.
+ * @param user
  */
-function loadCityData(city, date){
-    const input = JSON.stringify({location: city, date: date});
+function loadUserStories(user){
+    const input = JSON.stringify({user: user});
     $.ajax({
-        url: '/weather_data',
+        url: '/[POST URL]',
         data: input,
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
-            // no need to JSON parse the result, as we are using
-            // dataType:json, so JQuery knows it and unpacks the
-            // object for us before returning it
-            addToResults(dataR);
-            storeCachedData(dataR.location, dataR);
+            // Store the result data in a card on the page
+            addToResultsSection(dataR);
+
+            // Add the data to the cache (currently accepts a single story)
+            cacheData(dataR);
+
+            // Hide the 'offline' alert, as server request was successful
             if (document.getElementById('offline_div')!=null)
                     document.getElementById('offline_div').style.display='none';
         },
-        // the request to the server has failed. Let's show the cached data
+
+        // If the server request fails, show the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedData(city, date);
+            getCachedData(user);
+
+            // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
                     dvv.style.display='block';
         }
     });
-    // hide the list of cities if currently shown
-    if (document.getElementById('city_list')!=null)
-        document.getElementById('city_list').style.display = 'none';
+
+    // Anything that happens after the ajax request goes here
+
 }
 
 /**
- * given one city and a date, it queries the server via Ajax to get the latest
- * posts
- * if the request to the server fails, it shows the data stored in the database
- * @param city
- * @param date
+ * Post request to /stories. Gets back whatever /stories returns. Could be a list of all the stories?
  */
 function loadPosts(){
     $.ajax({
@@ -108,7 +105,7 @@ function loadPosts(){
 
             // Display the output on the screen
 
-            addToResults(dataR);
+            addToResultsSection(dataR);
 
             //  Update the database with the new data, as it is online
             //storeCachedData(dataR);
@@ -126,11 +123,14 @@ function loadPosts(){
                 dvv.style.display='block';
         }
     });
-    // hide the list of cities if currently shown
-    if (document.getElementById('city_list')!=null)
-        document.getElementById('city_list').style.display = 'none';
+
+    // Anything that happens after the ajax request goes here
+
 }
 
+/**
+ * Posts a story to /stories_list using ajax.
+ */
 function sendStory(story){
     const data = JSON.stringify({text: story.text});
 
@@ -140,23 +140,21 @@ function sendStory(story){
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
-            // no need to JSON parse the result, as we are using
-            // dataType:json, so JQuery knows it and unpacks the
-            // object for us before returning it
-
             // Display the output on the screen
             console.log("response received");
-            addToResults(dataR);
 
+            // Adds the returned data to a card on the page.
+            addToResultsSection(dataR);
 
-            //  Update the database with the new data, as it is online
-            //storeCachedData(dataR);
+            // Cache the data for offline viewing
+            cacheData(dataR);
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)
                 document.getElementById('offline_div').style.display='none';
         },
-        // the request to the server has failed. Let's show the cached data
+
+        // the request to the server has failed. Display the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
             console.log("ajax post failed",error);
@@ -166,33 +164,22 @@ function sendStory(story){
                 dvv.style.display='block';
         }
     });
-    // hide the list of cities if currently shown
-    if (document.getElementById('city_list')!=null)
-        document.getElementById('city_list').style.display = 'none';
 
+    // Anything that happens after the ajax request goes here
+
+    // Prevent the page from refreshing and clearing the posts just loaded
     event.preventDefault();
 }
 
 
-///////////////////////// INTERFACE MANAGEMENT ////////////
+///////////////////////// INTERFACE MANAGEMENT ///////////////////////////
 
 
 /**
- * given the forecast data returned by the server,
- * it adds a row of weather forecasts to the results div
- * @param dataR the data returned by the server:
- * class WeatherForecast{
-  *  constructor (location, date, forecast, temperature, wind, precipitations) {
-  *    this.location= location;
-  *    this.date= date,
-  *    this.forecast=forecast;
-  *    this.temperature= temperature;
-  *    this.wind= wind;
-  *    this.precipitations= precipitations;
-  *  }
-  *}
+ * Creates a card on the page with the input data
+ * @param dataR
  */
-function addToResults(dataR) {
+function addToResultsSection(dataR) {
     console.log("updating results");
 
     var resultsDiv = $('#results');
@@ -209,31 +196,6 @@ function addToResults(dataR) {
         // rather than assigning innerHTML
         row.innerHTML = "<div class=\"card-block\">" + dataR.text + "</div>";
     }
-}
-
-
-/**
- * it removes all forecasts from the result div
- */
-function refreshCityList(){
-    if (document.getElementById('results')!=null)
-        document.getElementById('results').innerHTML='';
-}
-
-
-/**
- * it enables selecting the city from the drop down menu
- * it saves the selected city in the database so that it can be retrieved next time
- * @param city
- * @param date
- */
-function selectCity(city, date) {
-    var cityList=JSON.parse(localStorage.getItem('cities'));
-    if (cityList==null) cityList=[];
-    cityList.push(city);
-    cityList = removeDuplicates(cityList);
-    localStorage.setItem('cities', JSON.stringify(cityList));
-    retrieveAllCitiesData(cityList, date);
 }
 
 /**
@@ -265,8 +227,7 @@ function createPost(){
 
 
 /**
- * When the client gets off-line, it shows an off line warning to the user
- * so that it is clear that the data is stale
+ * When the client goes offline, show an offline warning for the user
  */
 window.addEventListener('offline', function(e) {
     // Queue up events for server.
@@ -275,7 +236,7 @@ window.addEventListener('offline', function(e) {
 }, false);
 
 /**
- * When the client gets online, it hides the off line warning
+ * When the client gets online, hide the offline warning
  */
 window.addEventListener('online', function(e) {
     // Resync data with server.
@@ -293,29 +254,4 @@ function showOfflineWarning(){
 function hideOfflineWarning(){
     if (document.getElementById('offline_div')!=null)
         document.getElementById('offline_div').style.display='none';
-}
-
-
-/**
- * it shows the city list in the browser
- */
-function showCityList() {
-    if (document.getElementById('city_list')!=null)
-        document.getElementById('city_list').style.display = 'block';
-}
-
-
-
-/**
- * Given a list of cities, it removes any duplicates
- * @param cityList
- * @returns {Array}
- */
-function removeDuplicates(cityList) {
-    // remove any duplicate
-       var uniqueNames=[];
-       $.each(cityList, function(i, el){
-           if($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
-       });
-       return uniqueNames;
 }

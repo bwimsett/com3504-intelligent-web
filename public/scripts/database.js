@@ -1,23 +1,19 @@
 ////////////////// DATABASE //////////////////
-// the database receives from the server the following structure
-/** class WeatherForecast{
- *  constructor (location, date, forecast, temperature, wind, precipitations) {
- *    this.location= location;
- *    this.date= date,
- *    this.forecast=forecast;
- *    this.temperature= temperature;
- *    this.wind= wind;
- *    this.precipitations= precipitations;
- *  }
- *}
- */
+// the database receives the following structure from the server
+/**
+class Story{
+    constructor(text){
+        this.text = text;
+    }
+}
 var dbPromise;
+ */
 
 const STORIES_DB_NAME= 'db_stories_1';
 const STORY_STORE_NAME= 'store_stories';
 
 /**
- * it inits the database
+ * Initialise the database.
  */
 function initDatabase(){
     dbPromise = idb.openDb(STORIES_DB_NAME, 1, function (upgradeDb) {
@@ -27,11 +23,12 @@ function initDatabase(){
         }
     });
 }
+
 /**
- * saves a story to indexed db, or local storage if that fails
+ * saves a single story to indexed db, or local storage if that fails
  * @param storyObject
  */
-function storeCachedData(storyObject) {
+function cacheData(storyObject) {
     console.log('inserting: '+JSON.stringify(storyObject));
     // Attempt to use Indexed DB
     if (dbPromise) {
@@ -56,10 +53,7 @@ function storeCachedData(storyObject) {
 
 
 /**
- * it retrieves the list of stories from the database
- * @param city
- * @param date
- * @returns {*}
+ * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
  */
 function getCachedData() {
     if (dbPromise) {
@@ -74,88 +68,31 @@ function getCachedData() {
             if (readingsList && readingsList.length>0){
                 var max;
                 for (var elem of readingsList)
-                    if (!max || elem.date>max.date)
+                    if (!max /*|| elem.date>max.date*/)
                         max= elem;
-                if (max) addToResults(max);
+                if (max) addToResultsSection(max);
             } else {
-                const value = localStorage.getItem(city);
+                const value = localStorage.getItem(/*city*/);
                 if (value == null)
-                    addToResults({city: city, date: date});
-                else addToResults(value);
+                    addToResultsSection({/*city: city, date: date*/});
+                else addToResultsSection(value);
             }
         });
     } else {
-        const value = localStorage.getItem(city);
+        const value = localStorage.getItem(/*city*/);
         if (value == null)
-            addToResults( {city: city, date: date});
-        else addToResults(value);
+            addToResultsSection( {/*city: city, date: date*/});
+        else addToResultsSection(value);
     }
 }
 
 
 /**
- * Given story data, return the text
+ * Given story data, return the text field.
  * @param dataR data returned by the server
  */
 function getStoryText(dataR){
     if(dataR.text == null && dataR.text === undefined)
         return "[NO TEXT FOR THIS STORY]";
     return dataR.text;
-}
-
-/**
- * given the server data, it returns the value of the field precipitations
- * @param dataR the data returned by the server
- * @returns {*}
- */
-function getPrecipitations(dataR) {
-    if (dataR.precipitations == null && dataR.precipitations === undefined)
-        return "unavailable";
-    return dataR.precipitations
-}
-
-/**
- * given the server data, it returns the value of the field wind
- * @param dataR the data returned by the server
- * @returns {*}
- */
-function getWind(dataR) {
-    if (dataR.wind == null && dataR.wind === undefined)
-        return "unavailable";
-    else return dataR.wind;
-}
-
-/**
- * given the server data, it returns the value of the field temperature
- * @param dataR the data returned by the server
- * @returns {*}
- */
-function getTemperature(dataR) {
-    if (dataR.temperature == null && dataR.temperature === undefined)
-        return "unavailable";
-    else return dataR.temperature;
-}
-
-
-/**
- * the server returns the forecast as a n integer. Here we find out the
- * string so to display it to the user
- * @param forecast
- * @returns {string}
- */
-function getForecast(forecast) {
-    if (forecast == null && forecast === undefined)
-        return "unavailable";
-    switch (forecast) {
-        case CLOUDY:
-            return 'Cloudy';
-        case CLEAR:
-            return 'Clear';
-        case RAINY:
-            return 'Rainy';
-        case OVERCAST:
-            return 'Overcast';
-        case SNOWY:
-            return 'Snowy';
-    }
 }
