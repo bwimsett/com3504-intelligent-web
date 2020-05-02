@@ -31,8 +31,13 @@ class Story{
     }
 }
 
-router.get('/home', function (req, res) {
+router.get('/home', function (req, res, next) {
 res.render('home', { title: 'Dashboard' });
 });
+
+router.get('/likes', function (req, res, next) {
+    res.render('likes', { title: 'Likes' });
+});
+
 
 module.exports = router;

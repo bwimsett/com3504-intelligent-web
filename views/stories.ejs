@@ -44,18 +44,28 @@
     <script src="/scripts/bootstrap.min.js"></script>
 </head>
 <body onload="initStories()">
-    <h2>Stories</h2>
+
+<div class="container" style="width: 100%">
+    <div class="row">
+        <div class="col-xs-10"><h1>Stories</h1></div>
+    </div>
+</div>
+
+    <div class="navbar">
+        <span><a href="./home">home</a></span>
+        <span><a href="./stories">new story</a></span>
+        <span><a href="./likes">Likes</a></span>
+        <span><a href="/logout">log out</a></span>
+    </div>
+
     <form>
         <textarea id="textfield" rows="10" cols="50"></textarea>
         <br>
         <button onclick="createPost()">Create Post</button>
     </form>
+
     <div id="results">
-
     </div>
-
-
-
-
 </body>
+
 </html>
