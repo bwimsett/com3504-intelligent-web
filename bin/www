@@ -9,6 +9,10 @@ var debug = require('debug')('progressiveapp:server');
 var https = require('https');
 var fs = require('fs-extra');
 
+// DATABASES
+var userDatabase= require('../databases/users');
+var storyDatabase= require('../databases/stories');
+
 /**
  * Get port from environment and store in Express.
  */
