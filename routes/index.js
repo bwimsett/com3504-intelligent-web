@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var user = require('../controllers/users');
-var story = require('../controllers/stories');
+var userController = require('../controllers/users');
+var storyController = require('../controllers/stories');
 var initDB = require('../controllers/init');
 initDB.init();
 
@@ -23,11 +23,12 @@ router.get('/register', function(req, res, next){
 });
 
 /* POST Story data */
-router.post('/stories_list', function(req, res, next){
+router.post('/stories_list', storyController.insert);/*{
     const story = new Story(req.body.text);
     res.setHeader('Content-Type', 'application/json');
+    storyController.insert;
     res.send(JSON.stringify(story));
-});
+});*/
 
 router.post('/login', function(req, res, next){
     const user = new Story(req.body.username, req.body.password);
