@@ -1,10 +1,3 @@
-const CLOUDY = 0;
-const CLEAR = 1;
-const RAINY = 2;
-const OVERCAST = 3;
-const SNOWY = 4;
-
-
 /**
  * called by the HTML onload
  * showing any cached stories and declaring the service worker
@@ -247,12 +240,12 @@ function register() {
 
 function loggedIn(){
     var currentUser=JSON.parse(localStorage.getItem('currentUser'));
-    return (currentUser==null)
+    return (currentUser==null);
 }
 
 function login() {
     console.log("trying to login fdata.... " + fdata);
-    alert("lddddd")
+    alert("lddddd");
     var currentUser=JSON.parse(localStorage.getItem('currentUser'));
     var fdata = document.getElementById("logform");
     var user = new User(fdata.username, fdata.password);

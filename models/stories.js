@@ -11,6 +11,6 @@ var Story = new Schema(
 
 Story.set('toObject', {getters: true, virtuals: true});
 
-var storyModel = mongoose.model('Story', story);
+var storyModel = mongoose.model('Story', Story );
 
 module.exports = storyModel;

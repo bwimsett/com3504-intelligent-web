@@ -7,17 +7,13 @@ mongoose.Promise = global.Promise;
 var mongoDB = 'mongodb://localhost:27017/stories';
 
 mongoose.Promise = global.Promise;
-try {
-    connection = mongoose.connect(mongoDB, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        checkServerIdentity: false,
-    });
-    console.log('connection to mongodb worked!');
 
+connection = mongoose.connect(mongoDB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    checkServerIdentity: false,
+})
+.then( console.log('connection to mongodb worked!'))
 // db.dropDatabase();
-
-} catch (e) {
-    console.log('error in db connection: ' + e.message);
-}
+.catch(error => console.error(error))
 
