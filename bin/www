@@ -10,8 +10,8 @@ var https = require('https');
 var fs = require('fs-extra');
 
 // DATABASES
-var userDatabase= require('../databases/users');
-var storyDatabase= require('../databases/stories');
+var database = require('../databases/mongodb');
+
 
 /**
  * Get port from environment and store in Express.
