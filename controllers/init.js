@@ -1,23 +1,22 @@
 var mongoose = require('mongoose');
-var User = require('../models/users');
-
+var Story = require('../models/stories');
 
 exports.init= function() {
+    console.log("test");
     // uncomment if you need to drop the database
     //
     // Character.remove({}, function(err) {
     //    console.log('collection removed')
     // });
 
-    // const dob=new Date(1908, 12, 1).getFullYear();
-    // var character = new Character({
-    //     first_name: 'Mickey',
-    //     family_name: 'Mouse',
-    //     dob: dob
-    // });
-    // console.log('dob: '+character.dob);
+    const date=new Date(1908, 12, 1).getFullYear();
+    var story = new Story({
+         text: 'teststory',
+         date_created: date
+     });
+    console.log(story.text);
 
-    // character.save(function (err, results) {
-    //     console.log(results._id);
-    // });
+    story.save(function (err, results) {
+         console.log(results._id);
+    });
 }

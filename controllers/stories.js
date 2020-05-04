@@ -1,4 +1,4 @@
-var story = require('../models/stories');
+var Story = require('../models/stories');
 
 /** Called from a POST route as story.insert
  * Adds a story to the mongodb database
@@ -10,9 +10,9 @@ exports.insert = function (req, res) {
         res.status(403).send('No data sent!')
     }
     try {
-        var story = new story({
+        var story = new Story({
             text: storyData.text,
-            date_created: new Date().getDate()
+            date_created: new Date().getDate().valueOf()
         });
 
         console.log('received: ' + story);
