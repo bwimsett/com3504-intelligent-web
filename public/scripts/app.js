@@ -226,35 +226,54 @@ function createPost(){
 }
 
 function register() {
-
+    console.log("register123");
     var userList=JSON.parse(localStorage.getItem('users'));
     if (userList==null) userList=[];
-    var fdata = document.getElementById("regform");
-    var user = new User(fdata.username, fdata.password);
+    var un = $('#username').val();
+    var pw = $('#password').val();
+    var user = new User(un, pw);
     userList.push(user);
-    console.log("register "+fdata);
+    console.log("register "+$('#password').val());
     userList = removeDuplicates(userList);
+
+    console.log('inserting: '+JSON.stringify(user));
     localStorage.setItem('users', JSON.stringify(userList));
     addUser(user);
 }
 
 function loggedIn(){
-    var currentUser=JSON.parse(localStorage.getItem('currentUser'));
-    return (currentUser==null);
+    var currentUser=localStorage.getItem('currentUser');
+    return !(currentUser==null);
+}
+
+function reIfLogged(){
+    if(loggedIn()){
+        window.location.replace("./home");
+    }
+}
+
+
+function logout(){
+    localStorage.removeItem("currentUser");
+    window.location.replace("./");
+
+}
+
+function getCurrentUser(){
+    console.log(JSON.parse(localStorage.getItem('currentUser')));
+    return JSON.parse(localStorage.getItem('currentUser'))
 }
 
 function login() {
-    console.log("trying to login fdata.... " + fdata);
-    alert("lddddd");
     var currentUser=JSON.parse(localStorage.getItem('currentUser'));
     var fdata = document.getElementById("logform");
-    var user = new User(fdata.username, fdata.password);
-
+    var un = $('#username').val();
+    var pw = $('#password').val();
+    var user = new User(un, pw);
     if (!loggedIn()) {
-
-
         loginUser(user);
     }else{
+        window.location.replace("./home");
         console.log("already logged in.... " + fdata);
     }
 }
@@ -267,10 +286,10 @@ function addUser(user){
         data: data,
         contentType: 'application/json',
         type: 'POST',
-        success: function (dataR) {
+        success: function (response) {
 
             // Cache the data for offline viewing
-            addUserData(dataR);
+            addUserData(user);
             // Display the output on the screen
             console.log("response received registering ----");
         },
@@ -289,11 +308,12 @@ function loginUser(user){
         data: data,
         contentType: 'application/json',
         type: 'POST',
-        success: function (dataR) {
+        success: function (response) {
 
-            findUser(dataR);
+            findUser(user);
             // Display the output on the screen
             console.log("response received logging in ----");
+
         },
 
         // the request to the server has failed. Display the cached data instead.

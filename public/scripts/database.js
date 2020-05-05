@@ -21,6 +21,8 @@ function initDatabase(){
         if (!upgradeDb.objectStoreNames.contains(STORY_STORE_NAME)) {
             var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: 'id', autoIncrement: true});
             storyDB.createIndex('text', 'text', {unique: false, multiEntry: true});
+        }
+        if (!upgradeDb.objectStoreNames.contains(USER_STORE_NAME)){
             var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: 'username'});
         }
     });
@@ -57,13 +59,15 @@ function cacheData(storyObject) {
 function addUserData(user){
     if (dbPromise) {
         dbPromise.then(async db  => {
-            console.log('fetching: '+login);
+
+            console.log('inserting: '+JSON.stringify(user));
+            console.log("adding user to indexdn store")
             var tx = db.transaction(USER_STORE_NAME, 'readwrite');
             var store = tx.objectStore(USER_STORE_NAME);
             await store.put(user); // necessary as it returns a promise
             return tx.complete;
         }).then(function () {
-            alert("user added")
+            alert("register successful")
             console.log("register success");
         });
     }
@@ -72,7 +76,6 @@ function addUserData(user){
 function findUser(userObj){
     if (dbPromise) {
         dbPromise.then(function (db) {
-            console.log('fetching: '+login);
             var tx = db.transaction(USER_STORE_NAME, 'readonly');
             var store = tx.objectStore(USER_STORE_NAME);
             return store.get(userObj.username);
@@ -81,8 +84,8 @@ function findUser(userObj){
                 foundObject.password==userObj.password)){
 
                 console.log("login success");
-                alert("logged in")
                 localStorage.setItem('currentUser',foundObject.username);
+                window.location.reload();
 
             } else {
                 alert("login or password incorrect")

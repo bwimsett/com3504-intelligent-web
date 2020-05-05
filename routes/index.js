@@ -13,13 +13,18 @@ router.get('/', function(req, res, next) {
 
 /* GET Stories page */
 router.get('/stories', function(req, res, next){
-    res.render('stories');
+    res.render('stories', { title: "'s Stories" });
 });
 
 /* GET register page */
 router.get('/register', function(req, res, next){
     res.render('register');
 
+});
+
+/* GET login page */
+router.get('/login', function(req, res, next){
+    res.render('login');
 });
 
 /* POST Story data */
