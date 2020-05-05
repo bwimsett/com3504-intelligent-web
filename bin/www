@@ -6,7 +6,7 @@
 
 var app = require('../app');
 var debug = require('debug')('progressiveapp:server');
-var https = require('https');
+var http = require('http');
 var fs = require('fs-extra');
 
 // DATABASES
@@ -23,17 +23,17 @@ console.log("server ready on port "+port);
 
 /**
  * Create HTTPs server.
- */
-var options = {
-    key: fs.readFileSync('./private_access/ca.key'),
-    cert: fs.readFileSync('./private_access/ca.crt')
-};
+//  */
+// var options = {
+//     key: fs.readFileSync('./private_access/ca.key'),
+//     cert: fs.readFileSync('./private_access/ca.crt')
+// };
 
 /**
  * Create HTTPs server using the options
  */
+var server = http.createServer(app);
 // var server = https.createServer(options, app);
-var server = https.createServer(options, app);
 
 
 /**

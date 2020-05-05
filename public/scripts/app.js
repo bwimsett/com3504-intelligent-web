@@ -215,7 +215,7 @@ function createPost(){
     if(postList == null){
         postList = [];
     }
-    var formContents = $('#textfield').val();
+    var formContents = $('#newstory').val();
     var newPost = new Story(formContents);
     console.log("creating post with text: "+formContents);
     postList.push(newPost)
