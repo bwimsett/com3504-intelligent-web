@@ -4,8 +4,10 @@
  */
 function initStories() {
     // First load the data.
-    // This is uncommented until the database is fully implemented.
 
+
+
+    // This is uncommented until the database is fully implemented.
     //loadData();
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
@@ -24,6 +26,8 @@ function initStories() {
     else {
         console.log('This browser doesn\'t support IndexedDB');
     }
+
+    getCachedStories();
 }
 
 /**
@@ -70,7 +74,7 @@ function loadUserStories(user){
         // If the server request fails, show the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedData(user);
+            getCachedStories();
 
             // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
@@ -110,7 +114,7 @@ function loadPosts(){
         // the request to the server has failed. Let's show the cached data
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedData(city, date);
+            getCachedStories();
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
                 dvv.style.display='block';
@@ -191,12 +195,19 @@ function addToResultsSection(dataR) {
     }
 }
 
+function loadAllCachedStories(dataR){
+    console.log("Loading cached stories");
+
+
+}
+
 /**
  * @param text
  */
 class Story{
     constructor(text){
         this.text = text;
+        this.userid = 0; // TEMPORARY DEFAULT USER ID
     }
 }
 
@@ -226,7 +237,6 @@ function createPost(){
 }
 
 function register() {
-
     var userList=JSON.parse(localStorage.getItem('users'));
     if (userList==null) userList=[];
     var fdata = document.getElementById("regform");
@@ -258,7 +268,6 @@ function login() {
         console.log("already logged in.... " + fdata);
     }
 }
-
 
 function addUser(user){
     var data = JSON.stringify(user);
@@ -302,8 +311,6 @@ function loginUser(user){
         }
     });
 }
-
-
 
 function removeDuplicates(list) {
     // remove any duplicate

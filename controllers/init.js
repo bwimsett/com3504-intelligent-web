@@ -9,7 +9,7 @@ exports.init= function() {
     //    console.log('collection removed')
     // });
 
-    const date=new Date(1908, 12, 1).getFullYear();
+    /*const date=new Date(1908, 12, 1).getFullYear();
     var story = new Story({
          text: 'teststory',
          date_created: date
@@ -18,5 +18,5 @@ exports.init= function() {
 
     story.save(function (err, results) {
          console.log(results._id);
-    });
+    });*/
 }
