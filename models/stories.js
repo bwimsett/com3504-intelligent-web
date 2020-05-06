@@ -6,6 +6,7 @@ var Story = new Schema(
     {
         text: {type: String, required: true, max: 240},
         date_created: {type: Number, required: true},
+        user_id: {type: Number, required: true}
     }
 );
 
