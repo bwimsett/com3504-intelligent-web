@@ -45,27 +45,48 @@
 </head>
 <body onload="initStories()">
 
+
+<nav class="navbar navbar-expand-lg  navbar-dark bg-dark">
+    <a class="navbar-brand" href="/stories">Social Media App</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li>
+                <a class="nav-link" href="./home">Home</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="./stories">New Story</a>
+            </li>
+            <li>
+                <a class="nav-link" href="./likes">Likes</a>
+            </li>
+            <li>
+                <a class="nav-link" href="./logout">Logout</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
 <div class="container" style="width: 100%">
     <div class="row">
-        <div class="col-xs-10"><h1><%= title %></h1></div>
+        <div class="col-xs-10"><h1>Stories</h1></div>
     </div>
 </div>
 
-    <div class="navbar">
-        <span><a href="./home">home</a></span>
-        <span><a href="./stories">new story</a></span>
-        <span><a href="./likes">Likes</a></span>
-        <span><a onclick="logout()", href="#">log out</a></span>
-    </div>
+<form>
+<div class="form-group">
+    <label for="New Story">Create a new story</label>
+    <textarea class="form-control" id="newstory" rows="3" cols="50"></textarea>
+    <br>
+    <button type="button" class="btn btn-primary" onclick="createPost()">Create Post</button>
+</div>
+</form>
 
-    <form>
-        <textarea id="textfield" rows="10" cols="50"></textarea>
-        <br>
-        <button onclick="createPost()">Create Post</button>
-    </form>
 
-    <div id="results">
-    </div>
+<div id="results">
+</div>
 </body>
 
 </html>

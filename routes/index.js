@@ -58,6 +58,7 @@ function randomIntFromInterval(min,max) {
 class Story{
     constructor(text){
         this.text = text;
+        this.userid = 0;
     }
 }
 

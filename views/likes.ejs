@@ -3,15 +3,53 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Home</title>
+    <title>Likes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
     <link rel="stylesheet" href="/styles/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="styles/inline.css">
+
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Add to home screen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Project PWA">
+    <link rel="apple-touch-icon" href="images/icons/icon-152x152.png">
+    <meta name="msapplication-TileImage" content="images/icons/icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#2F3BA2">
+
     <script src="/scripts/jquery.min.js"></script>
-    <script src="/scripts/idb.js"></script>
-    <script src="/scripts/app.js"></script>
-    <script src="/scripts/database.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="/scripts/bootstrap.min.js"></script>
 </head>
 <body>
+
+<nav class="navbar navbar-expand-lg  navbar-dark bg-dark">
+    <a class="navbar-brand" href="/likes">Social Media App</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li>
+                <a class="nav-link" href="./home">Home</a>
+            </li>
+            <li >
+                <a class="nav-link" href="./stories">New Story</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="./likes">Likes</a>
+            </li>
+            <li>
+                <a class="nav-link" href="./logout">Logout</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
 
 <div class="container" style="width: 100%">
     <div class="row">
@@ -21,12 +59,6 @@
 
 <br>
 
-<div class="navbar">
-    <span><a href="./home">home</a></span>
-    <span><a href="./stories">new story</a></span>
-    <span><a href="./likes">Likes</a></span>
-    <span><a onclick="logout()", href="#">log out</a></span>
-</div>
 
 
 </body>

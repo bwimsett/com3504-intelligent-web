@@ -5,9 +5,9 @@ class Story{
     constructor(text){
         this.text = text;
     }
-}
+}*/
 var dbPromise;
- */
+
 
 const STORIES_DB_NAME= 'db_stories_1';
 const STORY_STORE_NAME= 'store_stories';
@@ -20,11 +20,13 @@ function initDatabase(){
     dbPromise = idb.openDb(STORIES_DB_NAME, 1, function (upgradeDb) {
         if (!upgradeDb.objectStoreNames.contains(STORY_STORE_NAME)) {
             var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: 'id', autoIncrement: true});
-            storyDB.createIndex('text', 'text', {unique: false, multiEntry: true});
-        }
-        if (!upgradeDb.objectStoreNames.contains(USER_STORE_NAME)){
+            storyDB.createIndex('user_id', 'user_id', {unique: false, multiEntry: true});
             var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: 'username'});
+        } else {
+
         }
+
+
     });
 }
 
@@ -59,15 +61,13 @@ function cacheData(storyObject) {
 function addUserData(user){
     if (dbPromise) {
         dbPromise.then(async db  => {
-
-            console.log('inserting: '+JSON.stringify(user));
-            console.log("adding user to indexdn store")
+            console.log('fetching: '+login);
             var tx = db.transaction(USER_STORE_NAME, 'readwrite');
             var store = tx.objectStore(USER_STORE_NAME);
             await store.put(user); // necessary as it returns a promise
             return tx.complete;
         }).then(function () {
-            alert("register successful")
+            alert("user added")
             console.log("register success");
         });
     }
@@ -76,6 +76,7 @@ function addUserData(user){
 function findUser(userObj){
     if (dbPromise) {
         dbPromise.then(function (db) {
+            console.log('fetching: '+login);
             var tx = db.transaction(USER_STORE_NAME, 'readonly');
             var store = tx.objectStore(USER_STORE_NAME);
             return store.get(userObj.username);
@@ -84,8 +85,8 @@ function findUser(userObj){
                 foundObject.password==userObj.password)){
 
                 console.log("login success");
+                alert("logged in")
                 localStorage.setItem('currentUser',foundObject.username);
-                window.location.reload();
 
             } else {
                 alert("login or password incorrect")
@@ -97,28 +98,32 @@ function findUser(userObj){
 /**
  * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
  */
-function getCachedData() {
+function getCachedStories() {
+    // If the indexed DB is set up
     if (dbPromise) {
         dbPromise.then(function (db) {
-            console.log('fetching: '+ stories);
+            console.log('fetching stories');
+            // Get the story store
             var tx = db.transaction(STORY_STORE_NAME, 'readonly');
             var store = tx.objectStore(STORY_STORE_NAME);
-            var stories = store.getAll();
-            var index = store.index('text');
-            return stories;
-        }).then(function (readingsList) {
-            if (readingsList && readingsList.length>0){
-                var max;
-                for (var elem of readingsList)
-                    if (!max /*|| elem.date>max.date*/)
-                        max= elem;
-                if (max) addToResultsSection(max);
-            } else {
-                const value = localStorage.getItem(/*city*/);
+
+            // Get stories by user id
+            var index = store.index('user_id');
+
+            // Only get stories with user_id of 0
+            return index.getAll(IDBKeyRange.only(0));
+        }).then(function (resultList) {
+            // Output every matching result to the page
+            if (resultList && resultList.length>0){
+                for (var elem of resultList)
+                    addToResultsSection(elem);
+
+            } /*else {
+                const value = localStorage.getItem('story');
                 if (value == null)
-                    addToResultsSection({/*city: city, date: date*/});
-                else addToResultsSection(value);
-            }
+                    return;
+                addToResultsSection(value);
+            }*/
         });
     } else {
         const value = localStorage.getItem(/*city*/);

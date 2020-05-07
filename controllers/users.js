@@ -42,7 +42,7 @@ exports.insert = function (req, res) {
         res.status(403).send('No data sent!')
     }
     try {
-        var user = new user({
+        var user = new User({
             username: userData.username,
             password: userData.password,
             dob: userData.year

@@ -4,8 +4,10 @@
  */
 function initStories() {
     // First load the data.
-    // This is uncommented until the database is fully implemented.
 
+
+
+    // This is uncommented until the database is fully implemented.
     //loadData();
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
@@ -24,6 +26,8 @@ function initStories() {
     else {
         console.log('This browser doesn\'t support IndexedDB');
     }
+
+    getCachedStories();
 }
 
 /**
@@ -70,7 +74,7 @@ function loadUserStories(user){
         // If the server request fails, show the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedData(user);
+            getCachedStories();
 
             // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
@@ -110,7 +114,7 @@ function loadPosts(){
         // the request to the server has failed. Let's show the cached data
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedData(city, date);
+            getCachedStories();
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
                 dvv.style.display='block';
@@ -191,12 +195,19 @@ function addToResultsSection(dataR) {
     }
 }
 
+function loadAllCachedStories(dataR){
+    console.log("Loading cached stories");
+
+
+}
+
 /**
  * @param text
  */
 class Story{
     constructor(text){
         this.text = text;
+        this.userid = 0; // TEMPORARY DEFAULT USER ID
     }
 }
 
@@ -215,7 +226,7 @@ function createPost(){
     if(postList == null){
         postList = [];
     }
-    var formContents = $('#textfield').val();
+    var formContents = $('#newstory').val();
     var newPost = new Story(formContents);
     console.log("creating post with text: "+formContents);
     postList.push(newPost)
@@ -226,58 +237,37 @@ function createPost(){
 }
 
 function register() {
-    console.log("register123");
     var userList=JSON.parse(localStorage.getItem('users'));
     if (userList==null) userList=[];
-    var un = $('#username').val();
-    var pw = $('#password').val();
-    var user = new User(un, pw);
+    var fdata = document.getElementById("regform");
+    var user = new User(fdata.username, fdata.password);
     userList.push(user);
-    console.log("register "+$('#password').val());
+    console.log("register "+fdata);
     userList = removeDuplicates(userList);
-
-    console.log('inserting: '+JSON.stringify(user));
     localStorage.setItem('users', JSON.stringify(userList));
     addUser(user);
 }
 
 function loggedIn(){
-    var currentUser=localStorage.getItem('currentUser');
-    return !(currentUser==null);
-}
-
-function reIfLogged(){
-    if(loggedIn()){
-        window.location.replace("./home");
-    }
-}
-
-
-function logout(){
-    localStorage.removeItem("currentUser");
-    window.location.replace("./");
-
-}
-
-function getCurrentUser(){
-    console.log(JSON.parse(localStorage.getItem('currentUser')));
-    return JSON.parse(localStorage.getItem('currentUser'))
+    var currentUser=JSON.parse(localStorage.getItem('currentUser'));
+    return (currentUser==null);
 }
 
 function login() {
+    console.log("trying to login fdata.... " + fdata);
+    alert("lddddd");
     var currentUser=JSON.parse(localStorage.getItem('currentUser'));
     var fdata = document.getElementById("logform");
-    var un = $('#username').val();
-    var pw = $('#password').val();
-    var user = new User(un, pw);
+    var user = new User(fdata.username, fdata.password);
+
     if (!loggedIn()) {
+
+
         loginUser(user);
     }else{
-        window.location.replace("./home");
         console.log("already logged in.... " + fdata);
     }
 }
-
 
 function addUser(user){
     var data = JSON.stringify(user);
@@ -286,10 +276,10 @@ function addUser(user){
         data: data,
         contentType: 'application/json',
         type: 'POST',
-        success: function (response) {
+        success: function (dataR) {
 
             // Cache the data for offline viewing
-            addUserData(user);
+            addUserData(dataR);
             // Display the output on the screen
             console.log("response received registering ----");
         },
@@ -308,12 +298,11 @@ function loginUser(user){
         data: data,
         contentType: 'application/json',
         type: 'POST',
-        success: function (response) {
+        success: function (dataR) {
 
-            findUser(user);
+            findUser(dataR);
             // Display the output on the screen
             console.log("response received logging in ----");
-
         },
 
         // the request to the server has failed. Display the cached data instead.
@@ -322,8 +311,6 @@ function loginUser(user){
         }
     });
 }
-
-
 
 function removeDuplicates(list) {
     // remove any duplicate
