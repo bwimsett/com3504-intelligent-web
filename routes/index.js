@@ -27,6 +27,11 @@ router.get('/login', function(req, res, next){
     res.render('login');
 });
 
+/* GET login page */
+router.get('/login', function(req, res, next){
+    res.render('login');
+});
+
 /* POST Story data */
 router.post('/stories_list', storyController.insert);/*{
     const story = new Story(req.body.text);

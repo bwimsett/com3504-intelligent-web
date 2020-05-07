@@ -24,9 +24,13 @@
 
     <!-- Latest compiled JavaScript -->
     <script src="/scripts/bootstrap.min.js"></script>
+     <script src="/scripts/jquery.min.js"></script>
+     <script src="/scripts/idb.js"></script>
+     <script src="/scripts/app.js"></script>
+     <script src="/scripts/database.js"></script>
 </head>
 
-<body>
+<body onload="initStories(), reIfLogged()">
 <nav class="navbar navbar-expand-lg  navbar-dark bg-dark">
     <a class="navbar-brand" href="/home">Social Media App</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +48,7 @@
                 <a class="nav-link" href="./likes">Likes</a>
             </li>
             <li>
-                <a class="nav-link" href="./logout">Logout</a>
+                <a class="nav-link" onclick="logout()", href="#">Logout</a>
             </li>
         </ul>
     </div>
