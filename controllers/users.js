@@ -18,21 +18,18 @@ exports.findUser = function (req, res) {
                 var user = null;
                 // Otherwise return the age of the user
                 if (users.length > 0) {
-
                     // Look at the first element in the list returned
-                    var firstElem = users[0];
-                    console.log('user exist - username.. '+ firstElem.username);
+                    user = users[0];
+                    console.log('user exist - username.. '+ user.username);
                     // Define a user as JSON
-                    if (firstElem.password == userData.password){
+                    if (user.password == userData.password){
                         console.log('password is correct');
-                        user = {
-                            username: firstElem.username,
-                            password: firstElem.password
-                        };
                     }else{
                         res.status(500).send('Invalid data!');
                     }
                 }
+                console.log("Logged in user ID: "+user._id);
+
                 // Send the response
                 res.setHeader('Content-Type', 'application/json');
                 res.send(JSON.stringify(user));
