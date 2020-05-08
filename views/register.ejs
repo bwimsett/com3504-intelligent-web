@@ -46,20 +46,17 @@
 </head>
 <body onload="initStories(), reIfLogged()">
 
-<div class="container" style="width: 100%">
-    <div class="row">
-            <div class="col-xs-10"><h1>Register</h1></div>
-    </div>
-    <form id="regform"  onsubmit="return false;">
-      <label for="username">Username:</label><br>
-      <input type="text" id="username" name="username" value=""><br>
-      <label for="password">Password:</label><br>
-      <input type="password" id="password" name="password" value=""><br><br>
-      <button id="registerButton" onclick=register()>Register</button>
-    </form>
-</div>
+<h1>Register</h1>
 
-<div id="results" style="text-align: center">
+    <form id="regform"  onsubmit="return false;">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" value=""><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" value=""><br><br>
+        <button type="button" onclick=register() >Register</button>
+     </form>
+
+
 
 </div>
 </div>

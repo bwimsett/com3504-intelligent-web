@@ -36,34 +36,31 @@
 
     <script src="/scripts/jquery.min.js"></script>
     <script src="/scripts/idb.js"></script>
+    <script src="/scripts/app.js"></script>
+    <script src="/scripts/database.js"></script>
 
     <!-- Latest compiled JavaScript -->
     <script src="/scripts/bootstrap.min.js"></script>
 </head>
 <body onload="initStories(), reIfLogged()">
 
-<div class="container" style="width: 100%">
-    <div class="row">
-        <div class="col-xs-10"><h1>Login</h1></div>
-    </div>
+<h1>Login</h1>
+
+
     <form id="logform"  onsubmit="return false;">
       <label for="username">Username:</label><br>
       <input type="text" id="username" name="username" value=""><br>
       <label for="password">Password:</label><br>
-      <input type="password" id="password" name="password" value=""><br><br>
-      <button id="logButton" onclick=login()>Login</button>
+      <input  type="password" id="password" name="password" value=""><br><br>
+      <button type="button" onclick=login() >Login</button>
     </form>
-</div>
 
-<div id="results" style="text-align: center">
 
-</div>
 </div>
 </div>
 
 </div>
-<script src="/scripts/app.js"></script>
-<script src="/scripts/database.js"></script>
+
 
 </body>
 </html>

@@ -40,7 +40,7 @@ router.post('/stories_list', storyController.insert);/*{
     res.send(JSON.stringify(story));
 });*/
 
-router.post('/login', function(req, res, next){
+/*router.post('/login', function(req, res, next){
     const user = new Story(req.body.username, req.body.password);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(user));
@@ -50,7 +50,12 @@ router.post('/register', function(req, res, next){
     const user = new Story(req.body.username, req.body.password);
     res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify(user));
-});
+});*/
+
+router.post('/register', userController.insert);
+
+router.post('/login', userController.findUser);
+
 
 
 function randomIntFromInterval(min,max) {

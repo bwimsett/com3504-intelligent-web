@@ -236,22 +236,6 @@ function createPost(){
     return false;
 }
 
-function register() {
-    console.log("register123");
-    var userList=JSON.parse(localStorage.getItem('users'));
-    if (userList==null) userList=[];
-    var un = $('#username').val();
-    var pw = $('#password').val();
-    var user = new User(un, pw);
-    userList.push(user);
-    console.log("register "+$('#password').val());
-    userList = removeDuplicates(userList);
-
-    console.log('inserting: '+JSON.stringify(user));
-    localStorage.setItem('users', JSON.stringify(userList));
-    addUser(user);
-}
-
 function loggedIn(){
     var currentUser=localStorage.getItem('currentUser');
     return !(currentUser==null);
@@ -287,18 +271,25 @@ function getCurrentUser(){
 
 function login() {
     var currentUser=JSON.parse(localStorage.getItem('currentUser'));
-    var fdata = document.getElementById("logform");
+
     var un = $('#username').val();
     var pw = $('#password').val();
     var user = new User(un, pw);
     if (!loggedIn()) {
         loginUser(user);
+        console.log('attempting to login user: '+ user.username);
     }else{
         window.location.replace("./home");
-        console.log("already logged in.... " + fdata);
+        console.log("already logged in.... ");
     }
 }
 
+function register(){
+    var un = $('#username').val();
+    var pw = $('#password').val();
+    var user = new User(un, pw);
+    addUser(user)
+}
 
 function addUser(user){
     var data = JSON.stringify(user);
@@ -308,11 +299,9 @@ function addUser(user){
         contentType: 'application/json',
         type: 'POST',
         success: function (response) {
-
-            // Cache the data for offline viewing
-            addUserData(user);
-            // Display the output on the screen
-            console.log("response received registering ----");
+            console.log("register sucessful ----");
+            alert("register successful");
+            window.location.reload();
         },
 
         // the request to the server has failed. Display the cached data instead.
@@ -324,14 +313,21 @@ function addUser(user){
 
 function loginUser(user){
     var data = JSON.stringify(user);
+    console.log("running data" + data);
     $.ajax({
         url: '/login',
         data: data,
         contentType: 'application/json',
         type: 'POST',
         success: function (response) {
+            if (response == null){
+               alert("incorrect details");
+            }else{
+                window.location.reload();
+                localStorage.setItem('currentUser',response.username);
+            }
 
-            findUser(user);
+            //findUser(user);
             // Display the output on the screen
             console.log("response received logging in ----");
 
@@ -339,19 +335,13 @@ function loginUser(user){
 
         // the request to the server has failed. Display the cached data instead.
         error: function (xhr, status, error) {
+            alert("incorrect details");
+            window.location.reload();
             console.log("ajax post failed",error);
         }
     });
 }
 
-function removeDuplicates(list) {
-    // remove any duplicate
-    var uniqueNames=[];
-    $.each(list, function(i, el){
-        if($.inArray(el, uniqueNames) === -1) uniqueNames.push(el);
-    });
-    return uniqueNames;
-}
 
 /**
  * When the client goes offline, show an offline warning for the user

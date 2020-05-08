@@ -1,14 +1,16 @@
 var User = require('../models/users');
 
 // Called from the route as 'user.getAge'
-exports.getAge = function (req, res) {
+exports.findUser = function (req, res) {
+    console.log('controller working');
     var userData = req.body;
     if (userData == null) {
         res.status(403).send('No data sent!')
     }
     try {
+        console.log('user searching.. is '+ userData.username);
         User.find({username: userData.username},
-            'username',
+            'username password',
             function (err, users) {
                 // If the data returned is invalid
                 if (err)
@@ -16,12 +18,20 @@ exports.getAge = function (req, res) {
                 var user = null;
                 // Otherwise return the age of the user
                 if (users.length > 0) {
+
                     // Look at the first element in the list returned
                     var firstElem = users[0];
+                    console.log('user exist - username.. '+ firstElem.username);
                     // Define a user as JSON
-                    user = {
-                        username: firstElem.username, dob: firstElem.dob, age: firstElem.age
-                    };
+                    if (firstElem.password == userData.password){
+                        console.log('password is correct');
+                        user = {
+                            username: firstElem.username,
+                            password: firstElem.password
+                        };
+                    }else{
+                        res.status(500).send('Invalid data!');
+                    }
                 }
                 // Send the response
                 res.setHeader('Content-Type', 'application/json');
@@ -45,7 +55,6 @@ exports.insert = function (req, res) {
         var user = new User({
             username: userData.username,
             password: userData.password,
-            dob: userData.year
         });
 
         console.log('received: ' + user);
