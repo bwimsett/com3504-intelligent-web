@@ -308,11 +308,10 @@ function addUser(user){
         contentType: 'application/json',
         type: 'POST',
         success: function (response) {
-
             // Cache the data for offline viewing
             addUserData(user);
             // Display the output on the screen
-            console.log("response received registering ----");
+            console.log("registered new user: "+response._id);
         },
 
         // the request to the server has failed. Display the cached data instead.

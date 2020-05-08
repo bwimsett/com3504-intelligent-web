@@ -6,7 +6,6 @@ var User = new Schema(
     {
         username: {type: String, required: true, max: 25},
         password: {type: String, required: true, max: 25},
-        dob: {type: Date}
     }
 );
 

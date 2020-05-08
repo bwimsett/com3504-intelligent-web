@@ -46,11 +46,7 @@ router.post('/login', function(req, res, next){
     res.send(JSON.stringify(user));
 });
 
-router.post('/register', function(req, res, next){
-    const user = new Story(req.body.username, req.body.password);
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(user));
-});
+router.post('/register', userController.insert);
 
 
 function randomIntFromInterval(min,max) {

@@ -61,7 +61,6 @@ function cacheData(storyObject) {
 function addUserData(user){
     if (dbPromise) {
         dbPromise.then(async db  => {
-
             console.log('inserting: '+JSON.stringify(user));
             console.log("adding user to indexdn store")
             var tx = db.transaction(USER_STORE_NAME, 'readwrite');

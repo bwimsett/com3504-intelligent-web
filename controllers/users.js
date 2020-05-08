@@ -45,7 +45,6 @@ exports.insert = function (req, res) {
         var user = new User({
             username: userData.username,
             password: userData.password,
-            dob: userData.year
         });
 
         console.log('received: ' + user);
