@@ -8,7 +8,7 @@ function initStories() {
 
 
     // This is uncommented until the database is fully implemented.
-    //loadData();
+    // loadData();
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
             .register('./service-worker.js')
@@ -129,7 +129,7 @@ function loadPosts(){
  * Posts a story to /stories_list using ajax.
  */
 function sendStory(story){
-    const data = JSON.stringify({text: story.text});
+    const data = JSON.stringify(story);
 
     $.ajax({
         url: '/stories_list',
@@ -205,14 +205,14 @@ function loadAllCachedStories(dataR){
  * @param text
  */
 class Story{
-    constructor(text){
+    constructor(text, user_id){
         this.text = text;
-        this.userid = 0; // TEMPORARY DEFAULT USER ID
+        this.user_id = user_id;
     }
 }
 
 class User{
-    constructor(username, password){
+    constructor(username, password, id){
         this.username = username;
         this.password = password;
     }
@@ -226,8 +226,12 @@ function createPost(){
     if(postList == null){
         postList = [];
     }
+
     var formContents = $('#newstory').val();
-    var newPost = new Story(formContents);
+    var currentUser = getCurrentUser();
+    var newPost = new Story(formContents, currentUser._id);
+
+
     console.log("creating post with text: "+formContents);
     postList.push(newPost)
     localStorage.setItem('posts', JSON.stringify(postList));
@@ -257,7 +261,6 @@ function reIfLogged(){
 
 }
 
-
 function logout(){
     localStorage.removeItem("currentUser");
     window.location.replace("./");
@@ -265,8 +268,8 @@ function logout(){
 }
 
 function getCurrentUser(){
-    console.log(JSON.parse(localStorage.getItem('currentUser')));
-    return JSON.parse(localStorage.getItem('currentUser'))
+    console.log(localStorage.getItem('currentUser'));
+    return JSON.parse(localStorage.getItem('currentUser'));
 }
 
 function login() {
@@ -299,7 +302,7 @@ function addUser(user){
         contentType: 'application/json',
         type: 'POST',
         success: function (response) {
-            console.log("register sucessful ----");
+            console.log("register sucessful, ID: "+user._id);
             alert("register successful");
             window.location.reload();
         },
@@ -324,7 +327,8 @@ function loginUser(user){
                alert("incorrect details");
             }else{
                 window.location.reload();
-                localStorage.setItem('currentUser',response.username);
+                localStorage.setItem('currentUser', JSON.stringify(response));
+                console.log("USER LOGGING IN: "+response._id);
             }
 
             //findUser(user);

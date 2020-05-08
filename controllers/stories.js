@@ -13,7 +13,7 @@ exports.insert = function (req, res) {
         var story = new Story({
             text: storyData.text,
             date_created: new Date().getDate().valueOf(),
-            user_id: 0 //SET USER ID AS 0 BY DEFAULT
+            user_id: storyData.user_id
         });
 
         console.log('received: ' + story);
