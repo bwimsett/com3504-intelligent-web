@@ -24,12 +24,11 @@ function initDatabase(){
         }
         if (!upgradeDb.objectStoreNames.contains(USER_STORE_NAME)){
             var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: 'username'});
+            userDB.createIndex('_id', "_id");
+            console.log("Initialised User DB");
         }
-
-
     });
 }
-
 
 /**
  * saves a single story to indexed db, or local storage if that fails
@@ -58,26 +57,29 @@ function cacheData(storyObject) {
     else localStorage.setItem(user, JSON.stringify(storyObject));
 }
 
-function addUserData(user){
+function cacheUsers(usersList){
+    for(var elem of usersList){
+        cacheUserData(elem);
+    }
+}
+
+function cacheUserData(user){
     if (dbPromise) {
         dbPromise.then(async db  => {
-
-
-
             console.log('inserting: '+JSON.stringify(user));
-            console.log("adding user to indexdn store")
+            console.log("adding user to indexeddb store")
             var tx = db.transaction(USER_STORE_NAME, 'readwrite');
             var store = tx.objectStore(USER_STORE_NAME);
             await store.put(user); // necessary as it returns a promise
             return tx.complete;
         }).then(function () {
-            alert("register successful")
-            console.log("register success");
+            //alert("register successful")
+            //console.log("register success");
         });
     }
 }
 
-function findUser(userObj){
+function loginUserOffline(userObj){
     if (dbPromise) {
         dbPromise.then(function (db) {
             var tx = db.transaction(USER_STORE_NAME, 'readonly');
@@ -88,7 +90,7 @@ function findUser(userObj){
                 foundObject.password==userObj.password)){
 
                 console.log("login success");
-                localStorage.setItem('currentUser',foundObject.username);
+                localStorage.setItem('currentUser',JSON.stringify(foundObject));
                 window.location.reload();
 
             } else {
@@ -96,6 +98,34 @@ function findUser(userObj){
             }
         });
     }
+}
+
+/**
+ * Retrieves a user object by ID, firing a callback when complete
+ * @param id
+ * @param callback
+ */
+function getUserById(id, callback){
+        if (dbPromise) {
+            dbPromise.then(function (db) {
+                var tx = db.transaction(USER_STORE_NAME, 'readonly');
+                var store = tx.objectStore(USER_STORE_NAME);
+                var index = store.index('_id');
+                var result = index.getAll();
+                return result;
+            }).then(function (results) {
+                for (var elem of results) {
+                    var requestId = id;
+                    var thisId = elem._id;
+
+                    if (elem._id == id) {
+                        console.log("found user with ID: " + id);
+                        return callback(elem);
+                    }
+                }
+                console.log("No user with id: " + id + " found");
+            });
+        }
 }
 
 /**
@@ -114,12 +144,12 @@ function getCachedStories() {
             var index = store.index('user_id');
 
             // Only get stories with user_id of 0
-            return index.getAll(IDBKeyRange.only(0));
+            return index.getAll(/*IDBKeyRange.only(0)*/);
         }).then(function (resultList) {
             // Output every matching result to the page
             if (resultList && resultList.length>0){
                 for (var elem of resultList)
-                    addToResultsSection(elem);
+                    createStoryCard(elem);
 
             } /*else {
                 const value = localStorage.getItem('story');
@@ -131,8 +161,8 @@ function getCachedStories() {
     } else {
         const value = localStorage.getItem(/*city*/);
         if (value == null)
-            addToResultsSection( {/*city: city, date: date*/});
-        else addToResultsSection(value);
+            createStoryCard( {/*city: city, date: date*/});
+        else createStoryCard(value);
     }
 }
 

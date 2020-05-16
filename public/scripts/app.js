@@ -4,7 +4,7 @@
  */
 function initStories() {
     // First load the data.
-
+    loadData();
 
 
     // This is uncommented until the database is fully implemented.
@@ -34,34 +34,30 @@ function initStories() {
  * given a list of users, retrieve all the data from the server (or failing that) from the database.
  */
 function loadData(){
-    // optional: Retrieve data set from localstorage? E.g. stories from specific users
-    var userList = JSON.parse(localStorage.getItem('[LOCALSTORAGE KEY]'));
-    retrieveAllStoryData(userList, new Date().getTime());
+    refreshCachedUsers();
+    retrieveAllStoryData();
 }
 
 /**
  * Cycles through the list of users and requests a story (or stories) from the server for each
  * user.
  */
-function retrieveAllStoryData(userList){
-    for (index in userList)
-        loadUserStories(userList[index]);
+function retrieveAllStoryData(){
+        loadStories();
 }
 
 /**
- * Given a user, returns a single story. Could be adapted for multiple stories.
+ * Returns all the stories and associated users
  * @param user
  */
-function loadUserStories(user){
-    const input = JSON.stringify({user: user});
+function loadStories(){
     $.ajax({
-        url: '/[POST URL]',
-        data: input,
+        url: '/stories',
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
             // Store the result data in a card on the page
-            addToResultsSection(dataR);
+            createStoryCard(dataR);
 
             // Add the data to the cache (currently accepts a single story)
             cacheData(dataR);
@@ -87,34 +83,27 @@ function loadUserStories(user){
 
 }
 
-/**
- * Post request to /stories. Gets back whatever /stories returns. Could be a list of all the stories?
- */
-function loadPosts(){
+function refreshCachedUsers(){
     $.ajax({
-        url: '/stories',
+        url: '/users_list',
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
-            // no need to JSON parse the result, as we are using
-            // dataType:json, so JQuery knows it and unpacks the
-            // object for us before returning it
 
-            // Display the output on the screen
+            // Add the data to the cache (currently accepts a single story)
+            cacheUsers(dataR);
 
-            addToResultsSection(dataR);
-
-            //  Update the database with the new data, as it is online
-            //storeCachedData(dataR);
-
-            // Hide the offline alert
+            // Hide the 'offline' alert, as server request was successful
             if (document.getElementById('offline_div')!=null)
                 document.getElementById('offline_div').style.display='none';
         },
-        // the request to the server has failed. Let's show the cached data
+
+        // If the server request fails, show the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
             getCachedStories();
+
+            // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
                 dvv.style.display='block';
@@ -122,8 +111,8 @@ function loadPosts(){
     });
 
     // Anything that happens after the ajax request goes here
-
 }
+
 
 /**
  * Posts a story to /stories_list using ajax.
@@ -141,7 +130,7 @@ function sendStory(story){
             console.log("response received");
 
             // Adds the returned data to a card on the page.
-            addToResultsSection(dataR);
+            createStoryCard(dataR);
 
             // Cache the data for offline viewing
             cacheData(dataR);
@@ -174,32 +163,36 @@ function sendStory(story){
 
 /**
  * Creates a card on the page with the input data
- * @param dataR
+ * @param storyData - data about the story
+ * @param userData  - data about the user that created the story
  */
-function addToResultsSection(dataR) {
-    console.log("updating results");
+function createStoryCard(storyData) {
+        console.log("updating results");
 
-    var resultsDiv = $('#results');
+        // Get the container for stories
+        var storyContainer = $('#storyContainer')[0];
 
-    if (resultsDiv != null) {
-        const row = document.createElement("div");
-        // appending a new row
-        document.getElementById('results').appendChild(row);
-        // formatting the row by applying css classes
-        row.classList.add("card");
-        row.classList.add("my_card");
-        row.classList.add("bg-faded");
-        // the following is far from ideal. we should really create divs using javascript
-        // rather than assigning innerHTML
-        row.innerHTML = "<div class=\"card-block\">" + dataR.text + "</div>";
-    }
+        if (storyContainer != null) {
+            // Await callback to get the user associated with this post
+
+            getUserById(storyData.user_id, function(user){
+                // Create a story card, and add it to the container
+                const storyCard = document.createElement("div");
+                storyContainer.appendChild(storyCard);
+
+                // Set HTML
+                storyCard.innerHTML =
+                    "<div class=\"card\">" +
+                    "<div class=\"card-body\">" +
+                    "<h5 class=\"card-title\">" + user.username + "</h5>" +
+                    "<p class = \"card-text\">" + storyData.text + "</p>" +
+                    "</div>" +
+                    "</div>";
+            });
+        }
+
 }
 
-function loadAllCachedStories(dataR){
-    console.log("Loading cached stories");
-
-
-}
 
 /**
  * @param text
@@ -211,12 +204,6 @@ class Story{
     }
 }
 
-class User{
-    constructor(username, password, id){
-        this.username = username;
-        this.password = password;
-    }
-}
 
 /**
  * Creates a new post from the form and stores it in local storage
@@ -228,7 +215,7 @@ function createPost(){
     }
 
     var formContents = $('#newstory').val();
-    var currentUser = getCurrentUser();
+    var currentUser = JSON.parse(getCurrentUser());
     var newPost = new Story(formContents, currentUser._id);
 
 
@@ -238,6 +225,16 @@ function createPost(){
     // Create ajax request to send new story and refresh page
     sendStory(newPost);
     return false;
+}
+
+
+/////////////////////////////////// LOGINS //////////////////////////////////
+
+class User{
+    constructor(username, password){
+        this.username = username;
+        this.password = password;
+    }
 }
 
 function loggedIn(){
@@ -268,13 +265,12 @@ function logout(){
 }
 
 function getCurrentUser(){
-    console.log(localStorage.getItem('currentUser'));
-    return JSON.parse(localStorage.getItem('currentUser'));
+    var currentUser = localStorage.getItem('currentUser');
+    console.log("Current user: "+currentUser);
+    return currentUser;
 }
 
 function login() {
-    var currentUser=JSON.parse(localStorage.getItem('currentUser'));
-
     var un = $('#username').val();
     var pw = $('#password').val();
     var user = new User(un, pw);
@@ -329,6 +325,7 @@ function loginUser(user){
                 window.location.reload();
                 localStorage.setItem('currentUser', JSON.stringify(response));
                 console.log("USER LOGGING IN: "+response._id);
+                window.location.replace("./home");
             }
 
             //findUser(user);
