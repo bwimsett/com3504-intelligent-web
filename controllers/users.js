@@ -39,6 +39,18 @@ exports.findUser = function (req, res) {
     }
 }
 
+exports.getAll = function (req, res) {
+    try {
+        User.find({}, function(err, result) {
+            if (err) throw err;
+            console.log(result);
+            res.send(result);
+        });
+    } catch (e) {
+        res.status(500).send('error ' + e);
+    }
+}
+
 /** Called from the route as user.insert
  * Adds a user to the mongodb database
  */

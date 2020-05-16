@@ -19,7 +19,6 @@ router.get('/stories', function(req, res, next){
 /* GET register page */
 router.get('/register', function(req, res, next){
     res.render('register');
-
 });
 
 /* GET login page */
@@ -40,23 +39,13 @@ router.post('/stories_list', storyController.insert);/*{
     res.send(JSON.stringify(story));
 });*/
 
-/*router.post('/login', function(req, res, next){
-    const user = new Story(req.body.username, req.body.password);
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(user));
-});
 
-router.post('/register', function(req, res, next){
-    const user = new Story(req.body.username, req.body.password);
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(user));
-});*/
+/* POST all the user data to associate with stories */
+router.post('/users_list', userController.getAll);
 
 router.post('/register', userController.insert);
 
 router.post('/login', userController.findUser);
-
-
 
 function randomIntFromInterval(min,max) {
     return Math.floor(Math.random()*(max-min+1)+min);
