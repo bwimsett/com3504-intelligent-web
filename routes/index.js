@@ -3,6 +3,7 @@ var router = express.Router();
 
 var userController = require('../controllers/users');
 var storyController = require('../controllers/stories');
+var likeController = require('../controllers/likes');
 var initDB = require('../controllers/init');
 initDB.init();
 
@@ -32,13 +33,10 @@ router.get('/login', function(req, res, next){
 });
 
 /* POST Story data */
-router.post('/stories_list', storyController.insert);/*{
-    const story = new Story(req.body.text);
-    res.setHeader('Content-Type', 'application/json');
-    storyController.insert;
-    res.send(JSON.stringify(story));
-});*/
+router.post('/stories_list', storyController.insert);
 
+/* POST Likes data */
+router.post('/likes', likeController.insert);
 
 /* POST all the user data to associate with stories */
 router.post('/users_list', userController.getAll);
@@ -46,27 +44,6 @@ router.post('/users_list', userController.getAll);
 router.post('/register', userController.insert);
 
 router.post('/login', userController.findUser);
-
-function randomIntFromInterval(min,max) {
-    return Math.floor(Math.random()*(max-min+1)+min);
-}
-
-/**
- * @param text
- */
-class Story{
-    constructor(text){
-        this.text = text;
-        this.userid = 0;
-    }
-}
-
-class User{
-    constructor(username, password){
-        this.username = username;
-        this.password = password;
-    }
-}
 
 router.get('/home', function (req, res, next) {
 res.render('home', { title: 'Dashboard' });
