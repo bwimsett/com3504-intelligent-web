@@ -12,7 +12,7 @@ exports.insert = function (req, res) {
     try {
         var story = new Story({
             text: storyData.text,
-            date_created: new Date().getDate().valueOf(),
+            date_created: Date.now(),
             user_id: storyData.user_id
         });
 

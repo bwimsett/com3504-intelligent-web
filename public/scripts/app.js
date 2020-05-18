@@ -57,7 +57,7 @@ function loadStories(){
         type: 'POST',
         success: function (dataR) {
             // Store the result data in a card on the page
-            createStoryCard(dataR);
+            stories.createStoryCard(dataR);
 
             // Add the data to the cache (currently accepts a single story)
             cacheData(dataR);
@@ -159,40 +159,6 @@ function sendStory(story){
 
 
 ///////////////////////// INTERFACE MANAGEMENT ///////////////////////////
-
-
-/**
- * Creates a card on the page with the input data
- * @param storyData - data about the story
- * @param userData  - data about the user that created the story
- */
-function createStoryCard(storyData) {
-        console.log("updating results");
-
-        // Get the container for stories
-        var storyContainer = $('#storyContainer')[0];
-
-        if (storyContainer != null) {
-            // Await callback to get the user associated with this post
-
-            getUserById(storyData.user_id, function(user){
-                // Create a story card, and add it to the container
-                const storyCard = document.createElement("div");
-                storyContainer.appendChild(storyCard);
-
-                // Set HTML
-                storyCard.innerHTML =
-                    "<div class=\"card\">" +
-                    "<div class=\"card-body\">" +
-                    "<h5 class=\"card-title\">" + user.username + "</h5>" +
-                    "<p class = \"card-text\">" + storyData.text + "</p>" +
-                    "</div>" +
-                    "</div>";
-            });
-        }
-
-}
-
 
 /**
  * @param text
