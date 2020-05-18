@@ -117,7 +117,7 @@ function loginUserOffline(userObj){
         dbPromise.then(function (db) {
             var tx = db.transaction(USER_STORE_NAME, 'readonly');
             var store = tx.objectStore(USER_STORE_NAME);
-            return store.get(userObj.username);
+            return store.get (userObj.username);
         }).then(function (foundObject) {
             if (foundObject && (foundObject.username==userObj.username &&
                 foundObject.password==userObj.password)){

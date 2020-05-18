@@ -50,3 +50,42 @@ function submitLike(value, storyID){
     event.preventDefault();
 }
 
+function getLikesByStoryId(id, callback){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readonly');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            var index = store.index('_id');
+            var result = index.getAll();
+            return result;
+        }).then(function (results) {
+            var output = [];
+
+            for (var elem of results) {
+                var requestId = id;
+                var thisId = elem._id;
+
+                if (elem.story_id == id) {
+                    console.log("found user with ID: " + id);
+                    output.push(elem);
+
+                }
+            }
+
+            return callback(output);
+        });
+    }
+}
+
+function getAverageRatingForStory(storyId, callback){
+    getLikesByStoryId(storyId, function(results){
+        var total = 0;
+
+        for(var elem of results){
+            total += elem.rating;
+        }
+
+        return callback(total/results.length);
+    });
+}
+
