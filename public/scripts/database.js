@@ -12,6 +12,7 @@ var dbPromise;
 const STORIES_DB_NAME= 'db_stories_1';
 const STORY_STORE_NAME= 'store_stories';
 const USER_STORE_NAME= 'store_users';
+const LIKES_STORE_NAME = 'store_likes';
 
 /**
  * Initialise the database.
@@ -19,12 +20,22 @@ const USER_STORE_NAME= 'store_users';
 function initDatabase(){
     dbPromise = idb.openDb(STORIES_DB_NAME, 1, function (upgradeDb) {
         if (!upgradeDb.objectStoreNames.contains(STORY_STORE_NAME)) {
-            var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: 'id', autoIncrement: true});
+            var storyDB = upgradeDb.createObjectStore(STORY_STORE_NAME, {keyPath: '_id', autoIncrement: true});
+            // Index for searching stories by user
             storyDB.createIndex('user_id', 'user_id', {unique: false, multiEntry: true});
         }
         if (!upgradeDb.objectStoreNames.contains(USER_STORE_NAME)){
-            var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: 'username'});
+            var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: '_id'});
             userDB.createIndex('_id', "_id");
+            console.log("Initialised User DB");
+        }
+        if (!upgradeDb.objectStoreNames.contains(LIKES_STORE_NAME)){
+            var likesDB = upgradeDb.createObjectStore(LIKES_STORE_NAME, {keyPath: '_id'});
+            likesDB.createIndex('_id', "_id");
+            // Index for searching likes by story
+            likesDB.createIndex('story_id', "story_id");
+            // Index for searching likes by user
+            likesDB.createIndex('user_id', "user_id");
             console.log("Initialised User DB");
         }
     });
@@ -34,7 +45,7 @@ function initDatabase(){
  * saves a single story to indexed db, or local storage if that fails
  * @param storyObject
  */
-function cacheData(storyObject) {
+function cacheStory(storyObject) {
     console.log('inserting: '+JSON.stringify(storyObject));
     // Attempt to use Indexed DB
     if (dbPromise) {
@@ -50,11 +61,33 @@ function cacheData(storyObject) {
             console.log('added item to the store! '+ JSON.stringify(storyObject));
             // If there's an error. store the item in local storage
         }).catch(function () {
-            localStorage.setItem(user, JSON.stringify(storyObject));
+            localStorage.setItem(storyObject, JSON.stringify(storyObject));
             console.log("added to local storage")
         });
     } // Otherwise us localstorage
-    else localStorage.setItem(user, JSON.stringify(storyObject));
+    else localStorage.setItem(storyObject, JSON.stringify(storyObject));
+}
+
+function cacheLike(likeObject) {
+    console.log('inserting like: '+JSON.stringify(likeObject));
+    // Attempt to use Indexed DB
+    if (dbPromise) {
+        // Try pushing to indexed db
+        dbPromise.then(async db => {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            await store.put(likeObject);
+            return tx.complete;
+            // Then output success
+        }).then(function () {
+            console.log('added like to the indexeddb store! '+ JSON.stringify(likeObject));
+            // If there's an error. store the item in local storage
+        }).catch(function () {
+            localStorage.setItem(likeObject, JSON.stringify(likeObject));
+            console.log("added like to local storage")
+        });
+    } // Otherwise us localstorage
+    else localStorage.setItem(likeObject, JSON.stringify(likeObject));
 }
 
 function cacheUsers(usersList){

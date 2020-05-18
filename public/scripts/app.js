@@ -60,7 +60,7 @@ function loadStories(){
             stories.createStoryCard(dataR);
 
             // Add the data to the cache (currently accepts a single story)
-            cacheData(dataR);
+            cacheStory(dataR);
 
             // Hide the 'offline' alert, as server request was successful
             if (document.getElementById('offline_div')!=null)
@@ -133,7 +133,7 @@ function sendStory(story){
             createStoryCard(dataR);
 
             // Cache the data for offline viewing
-            cacheData(dataR);
+            cacheStory(dataR);
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)

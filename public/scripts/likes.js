@@ -26,7 +26,7 @@ function submitLike(value, storyID){
             //createStoryCard(dataR);
 
             // Cache the data for offline viewing
-            //cacheData(dataR);
+            cacheLike(dataR);
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)
