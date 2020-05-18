@@ -19,15 +19,18 @@ function createStoryCard(storyData) {
         const storyCard = document.createElement("div");
         storyContainer.appendChild(storyCard);
 
-        // Set HTML
-        storyCard.innerHTML =
-            "<div class=\"card storyCard\">" +
-            "<div class=\"card-body\">" +
-            "<h5 class=\"card-title\">" + user.username+"</h5>" +
-            "<p class =\"mb-2 text-muted\">"+getDateStringFromStoryData(storyData)+"</p>"+
-            "<p class = \"card-text\">" + storyData.text + "</p>" +
-            "<button class= \"btn\" onclick=\'submitLike(1, \""+storyData._id+"\")\'>like</button>" +
-            "</div>";
+        getAverageRatingForStory(storyData._id, function(averageRating){
+            // Set HTML
+            storyCard.innerHTML =
+                "<div class=\"card storyCard\">" +
+                "<div class=\"card-body\">" +
+                "<h5 class=\"card-title\">" + user.username+"</h5>" +
+                "<p class =\"mb-2 text-muted\">"+getDateStringFromStoryData(storyData)+" | "+"Average rating: "+averageRating+"</p>" +
+                "<p class = \"card-text\">" + storyData.text + "</p>" +
+                "<button class= \"btn\" onclick=\'submitLike(1, \""+storyData._id+"\")\'>like (1) </button>" +
+                "<button class= \"btn\" onclick=\'submitLike(4, \""+storyData._id+"\")\'>like (4)</button>" +
+                "</div>";
+        })
     });
 }
 
