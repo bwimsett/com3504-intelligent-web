@@ -26,7 +26,7 @@ function createStoryCard(storyData) {
             "<h5 class=\"card-title\">" + user.username+"</h5>" +
             "<p class =\"mb-2 text-muted\">"+getDateStringFromStoryData(storyData)+"</p>"+
             "<p class = \"card-text\">" + storyData.text + "</p>" +
-            "</div>" +
+            "<button onclick=\'submitLike(1, \""+storyData._id+"\")\'>test</button>" +
             "</div>";
     });
 }
