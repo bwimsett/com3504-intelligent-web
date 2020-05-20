@@ -45,7 +45,7 @@ function initDatabase(){
  * saves a single story to indexed db, or local storage if that fails
  * @param storyObject
  */
-function cacheStory(storyObject) {
+function cacheStory(storyObject, callback) {
     console.log('inserting: '+JSON.stringify(storyObject));
     // Attempt to use Indexed DB
     if (dbPromise) {
@@ -58,7 +58,10 @@ function cacheStory(storyObject) {
             return tx.complete;
             // Then output success
         }).then(function () {
-            console.log('added item to the store! '+ JSON.stringify(storyObject));
+            console.log('added story to cache '+ JSON.stringify(storyObject));
+            if(callback != null){
+                callback();
+            }
             // If there's an error. store the item in local storage
         }).catch(function () {
             localStorage.setItem(storyObject, JSON.stringify(storyObject));
@@ -164,7 +167,7 @@ function getUserById(id, callback){
 /**
  * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
  */
-function getCachedStories() {
+function displayCachedStories() {
     // If the indexed DB is set up
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -179,17 +182,29 @@ function getCachedStories() {
             // Only get stories with user_id of 0
             return index.getAll(/*IDBKeyRange.only(0)*/);
         }).then(function (resultList) {
-            // Output every matching result to the page
-            if (resultList && resultList.length>0){
-                for (var elem of resultList)
-                    createStoryCard(elem);
+            displayStories(resultList);
+        });
+    } else {
+        const value = localStorage.getItem(/*city*/);
+        if (value == null)
+            createStoryCard( {/*city: city, date: date*/});
+        else createStoryCard(value);
+    }
+}
 
-            } /*else {
-                const value = localStorage.getItem('story');
-                if (value == null)
-                    return;
-                addToResultsSection(value);
-            }*/
+function clearCachedStories(callback){
+    // If the indexed DB is set up
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            console.log('fetching stories');
+            // Get the story store
+            var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(STORY_STORE_NAME);
+
+            store.clear();
+        }).then(function(){
+            console.log("Cleared cached stories");
+            callback();
         });
     } else {
         const value = localStorage.getItem(/*city*/);
