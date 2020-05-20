@@ -34,6 +34,70 @@ function createStoryCard(storyData) {
     });
 }
 
+/**
+ * Takes a list of stories and sorts them by chronological order (insertion sort)
+ */
+function sortStories(stories){
+    if (stories == null){
+        return stories;
+    }
+
+    var unsorted = stories;
+    var sorted = [];
+
+    while(unsorted.length > 0){
+
+        console.log(unsorted.length);
+        var current;
+        if(unsorted.length > 1) {
+            current = unsorted.shift();
+        } else {
+            current = unsorted.pop();
+        }
+
+        // If the sorted list is empty
+        if(sorted.length == 0){
+            sorted.push(current);
+            continue;
+        }
+
+        // Loop through sorted list
+        for(i = 0; i < sorted.length; i++){
+            // Insert if the date is greater than or equal to the current date
+            if(sorted[i].date_created <= current.date_created){
+                sorted.splice(i, 0, current);
+                break;
+            }
+
+            // if it has reached the end without insertion
+            if(i == sorted.length-1){
+                sorted.push(current);
+                break;
+            }
+        }
+    }
+
+    return sorted;
+}
+
+function displayStories(stories){
+    clearStoriesContainer();
+
+    // Sort the results
+    var sorted = sortStories(stories);
+
+    // Output every matching result to the page
+    if (sorted && sorted.length>0) {
+        for (var elem of sorted)
+            createStoryCard(elem);
+    }
+}
+
+function clearStoriesContainer(){
+   var container = $('#storyContainer')[0];
+   container.innerHTML = "";
+}
+
 function getDateStringFromStoryData(storyData){
     if(storyData.date_created == null){
         return;
@@ -57,3 +121,4 @@ function getDateStringFromStoryData(storyData){
 
     return dateString;
 }
+

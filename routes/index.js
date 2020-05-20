@@ -32,6 +32,8 @@ router.get('/login', function(req, res, next){
     res.render('login');
 });
 
+router.post('/stories', storyController.getAll);
+
 /* POST Story data */
 router.post('/stories_list', storyController.insert);
 

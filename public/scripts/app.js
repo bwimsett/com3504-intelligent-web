@@ -27,7 +27,7 @@ function initStories() {
         console.log('This browser doesn\'t support IndexedDB');
     }
 
-    getCachedStories();
+    displayCachedStories();
 }
 
 /**
@@ -56,21 +56,31 @@ function loadStories(){
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
-            // Store the result data in a card on the page
-            stories.createStoryCard(dataR);
+            if(dataR == null){
+                return;
+            }
 
-            // Add the data to the cache (currently accepts a single story)
-            cacheStory(dataR);
+            // Clear the story cache, then fill it with the newly returned data
+            clearCachedStories(function(){
+                var dataValue = dataR;
+
+                // Store the result data in a card on the page
+                $.each(dataR, function(index, element) {
+                    console.log(element);
+                    cacheStory(element);
+                });
+                displayStories(dataR);
+            })
 
             // Hide the 'offline' alert, as server request was successful
-            if (document.getElementById('offline_div')!=null)
-                    document.getElementById('offline_div').style.display='none';
+            /*if (document.getElementById('offline_div')!=null)
+                    document.getElementById('offline_div').style.display='none';*/
         },
 
         // If the server request fails, show the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedStories();
+            displayCachedStories();
 
             // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
@@ -94,14 +104,14 @@ function refreshCachedUsers(){
             cacheUsers(dataR);
 
             // Hide the 'offline' alert, as server request was successful
-            if (document.getElementById('offline_div')!=null)
-                document.getElementById('offline_div').style.display='none';
+            /*if (document.getElementById('offline_div')!=null)
+                document.getElementById('offline_div').style.display='none';*/
         },
 
         // If the server request fails, show the cached data instead.
         error: function (xhr, status, error) {
             showOfflineWarning();
-            getCachedStories();
+            displayCachedStories();
 
             // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
@@ -133,7 +143,9 @@ function sendStory(story){
             createStoryCard(dataR);
 
             // Cache the data for offline viewing
-            cacheStory(dataR);
+            cacheStory(dataR, function () {
+                displayCachedStories();
+            });
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)
