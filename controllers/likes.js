@@ -10,23 +10,27 @@ exports.insert = function (req, res) {
         res.status(403).send('No data sent!')
     }
     try {
-        var like = new Like({
+        var like = {
             rating: likeData.rating,
             date_created: Date.now(),
             user_id: likeData.user_id,
             story_id: likeData.story_id
-        });
+        };
 
         console.log('received: ' + like);
 
-        // Save the like to the database
-        like.save(function (err, results) {
-            console.log(results._id);
-            if (err)
-                res.status(500).send('Invalid data!');
+        var query = {user_id: likeData.user_id, story_id: likeData.story_id};
+        var options = {upsert: true, new: true, useFindAndModify: false};
 
-            res.setHeader('Content-Type', 'application/json');
-            res.send(JSON.stringify(like));
+
+        // Save the like to the database, update an old version if it exists
+        Like.findOneAndUpdate(query, like, options, function(err, result){
+            if(err){
+                console.log(err);
+                return res.send({ error: err });
+            }
+
+            return res.send("succesfully saved");
         });
     } catch (e) {
         // Display 500 error page if there was a problem with the request

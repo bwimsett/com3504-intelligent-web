@@ -73,24 +73,31 @@ function cacheStory(storyObject, callback) {
 
 function cacheLike(likeObject) {
     console.log('inserting like: '+JSON.stringify(likeObject));
-    // Attempt to use Indexed DB
-    if (dbPromise) {
-        // Try pushing to indexed db
-        dbPromise.then(async db => {
-            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
-            var store = tx.objectStore(LIKES_STORE_NAME);
-            await store.put(likeObject);
-            return tx.complete;
-            // Then output success
-        }).then(function () {
-            console.log('added like to the indexeddb store! '+ JSON.stringify(likeObject));
-            // If there's an error. store the item in local storage
-        }).catch(function () {
-            localStorage.setItem(likeObject, JSON.stringify(likeObject));
-            console.log("added like to local storage")
-        });
-    } // Otherwise us localstorage
-    else localStorage.setItem(likeObject, JSON.stringify(likeObject));
+    // Check like doesn't already exist
+    getLikeByStoryAndUser(likeObject.story_id, likeObject.user_id, function(existingLike){
+        // Remove the old like
+        removeLike(existingLike._id);
+
+        // Insert a new one
+        if (dbPromise) {
+            // Try pushing to indexed db
+            dbPromise.then(async db => {
+                var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+                var store = tx.objectStore(LIKES_STORE_NAME);
+                await store.put(likeObject);
+                return tx.complete;
+                // Then output success
+            }).then(function () {
+                console.log('added like to the indexeddb store! '+ JSON.stringify(likeObject));
+                // If there's an error. store the item in local storage
+             }).catch(function () {
+                localStorage.setItem(likeObject, JSON.stringify(likeObject));
+                console.log("added like to local storage")
+            });
+         } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
+    });
+
+
 }
 
 function cacheUsers(usersList){

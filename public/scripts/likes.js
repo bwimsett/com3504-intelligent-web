@@ -112,12 +112,43 @@ function getLikesByUserId(userId, callback){
  */
 function getLikeByStoryAndUser(storyId, userId, callback){
     getLikesByUserId(userId, function(userLikes){
-        for(var elem in userLikes){
-            if(elem._id == storyId){
+        for(var elem of userLikes){
+            if(elem.story_id == storyId){
                 callback(elem);
             }
         }
     });
+}
+
+function removeLike(likeId){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            var index = store.index('_id');
+            store.delete(likeId);
+        }).then(function () {
+            console.log("Like successfully removed from cache");
+        });
+    }
+}
+
+function getLikeById(likeId){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readonly');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            var index = store.index('_id');
+            var result = index.getAll();
+            return result;
+        }).then(function (results) {
+            for (var elem of results) {
+                if (elem._id == likeId) {
+                    return callback(elem);
+                }
+            }
+        });
+    }
 }
 
 function getAverageRatingForStory(storyId, callback){
