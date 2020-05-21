@@ -17,6 +17,7 @@ function createStoryCard(storyData) {
     getUserById(storyData.user_id, function(user){
         // Create a story card, and add it to the container
         const storyCard = document.createElement("div");
+        storyCard.id = "story"+storyData._id;
         storyContainer.appendChild(storyCard);
 
         getAverageRatingForStory(storyData._id, function(averageRating){
@@ -29,21 +30,36 @@ function createStoryCard(storyData) {
                 "<p class = \"card-text\">" + storyData.text + "</p>" +
                 //LIKE BUTTONS
                 "<div class=\"btn-group btn-group-toggle\" data-toggle=\"buttons\">"+
-                "<label class=\"btn btn-secondary active likeoption\" onclick=\"submitLike(1, \'"+storyData._id+"\')\">"+
-                "<input type=\"radio\" name=\"options\" id=\"option1\" autocomplete=\"off\" checked>1</label>"+
-                "<label class=\"btn btn-secondary likeoption\" onclick=\"submitLike(2, \'"+storyData._id+"\')\">"+
-                "<input type=\"radio\" name=\"options\" id=\"option2\" autocomplete=\"off\">2"+
+                "<label class=\"btn btn-secondary likeoption option1\" onclick=\"submitLike(1, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\" checked>1</label>"+
+                "<label class=\"btn btn-secondary likeoption option2\" onclick=\"submitLike(2, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\">2"+
                 "</label>"+
-                "<label class=\"btn btn-secondary likeoption\" onclick=\"submitLike(3, \'"+storyData._id+"\')\">"+
-                "<input type=\"radio\" name=\"options\" id=\"option3\" autocomplete=\"off\">3"+
+                "<label class=\"btn btn-secondary likeoption option3\" onclick=\"submitLike(3, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\">3"+
                 "</label>"+
-                "<label class=\"btn btn-secondary likeoption\" onclick=\"submitLike(4, \'"+storyData._id+"\')\">"+
-                "<input type=\"radio\" name=\"options\" id=\"option4\" autocomplete=\"off\">4"+
+                "<label class=\"btn btn-secondary likeoption option4\" onclick=\"submitLike(4, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\">4"+
                 "</label>"+
                 "</div>"+
                 "</div>";
         })
+
+        getLikeByStoryAndUser(storyData._id, storyData.user_id, function(like){
+            if(!like){
+                return;
+            }
+
+            highlightLikeButton(storyData._id, like.rating);
+        });
     });
+}
+
+function highlightLikeButton(storyId, buttonValue){
+    var card = $("#story"+storyId);
+    var buttonClass = $("#option"+buttonValue);
+    var button = card.find(buttonClass);
+    button.addClass("active");
 }
 
 /**

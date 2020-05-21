@@ -37,3 +37,13 @@ exports.insert = function (req, res) {
         res.status(500).send('error ' + e);
     }
 }
+
+exports.getAll = function (req, res) {
+    Like.find({}, function(err, result) {
+        if(err){
+            console.log(err);
+            res.status(500).send('Invalid request');
+        }
+        res.json(result);
+    });
+}

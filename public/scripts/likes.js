@@ -114,9 +114,11 @@ function getLikeByStoryAndUser(storyId, userId, callback){
     getLikesByUserId(userId, function(userLikes){
         for(var elem of userLikes){
             if(elem.story_id == storyId){
-                callback(elem);
+                return callback(elem);
             }
         }
+
+        return callback(null);
     });
 }
 
@@ -153,6 +155,7 @@ function getLikeById(likeId){
 
 function getAverageRatingForStory(storyId, callback){
     getLikesByStoryId(storyId, function(results){
+        console.log("Calculating average rating for story: "+storyId);
         var total = 0;
 
         for(var elem of results){

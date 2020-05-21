@@ -43,7 +43,8 @@ function loadData(){
  * user.
  */
 function retrieveAllStoryData(){
-        loadStories();
+    loadLikes();
+    loadStories();
 }
 
 /**
@@ -85,6 +86,50 @@ function loadStories(){
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
                     dvv.style.display='block';
+        }
+    });
+
+    // Anything that happens after the ajax request goes here
+
+}
+
+/**
+ * Returns all the stories and associated users
+ * @param user
+ */
+function loadLikes(){
+    $.ajax({
+        url: '/retrieve_likes',
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            if(dataR == null){
+                return;
+            }
+
+            // Clear the cache, then fill it with the newly returned data
+            clearCachedLikes(function(){
+                var dataValue = dataR;
+
+                $.each(dataR, function(index, element) {
+                    cacheLike(element);
+                });
+            })
+
+            // Hide the 'offline' alert, as server request was successful
+            /*if (document.getElementById('offline_div')!=null)
+                    document.getElementById('offline_div').style.display='none';*/
+        },
+
+        // If the server request fails, show the cached data instead.
+        error: function (xhr, status, error) {
+            showOfflineWarning();
+            displayCachedStories();
+
+            // Show the 'offline' alert
+            const dvv= document.getElementById('offline_div');
+            if (dvv!=null)
+                dvv.style.display='block';
         }
     });
 
