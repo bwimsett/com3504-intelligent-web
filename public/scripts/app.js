@@ -69,7 +69,6 @@ function loadStories(){
                     console.log(element);
                     cacheStory(element);
                 });
-                displayStories(dataR);
             })
 
             // Hide the 'offline' alert, as server request was successful
@@ -138,9 +137,6 @@ function sendStory(story){
         success: function (dataR) {
             // Display the output on the screen
             console.log("response received");
-
-            // Adds the returned data to a card on the page.
-            createStoryCard(dataR);
 
             // Cache the data for offline viewing
             cacheStory(dataR, function () {

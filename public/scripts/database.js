@@ -184,11 +184,6 @@ function displayCachedStories() {
         }).then(function (resultList) {
             displayStories(resultList);
         });
-    } else {
-        const value = localStorage.getItem(/*city*/);
-        if (value == null)
-            createStoryCard( {/*city: city, date: date*/});
-        else createStoryCard(value);
     }
 }
 
@@ -206,11 +201,6 @@ function clearCachedStories(callback){
             console.log("Cleared cached stories");
             callback();
         });
-    } else {
-        const value = localStorage.getItem(/*city*/);
-        if (value == null)
-            createStoryCard( {/*city: city, date: date*/});
-        else createStoryCard(value);
     }
 }
 
