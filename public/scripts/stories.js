@@ -27,8 +27,20 @@ function createStoryCard(storyData) {
                 "<h5 class=\"card-title\">" + user.username+"</h5>" +
                 "<p class =\"mb-2 text-muted\">"+getDateStringFromStoryData(storyData)+" | "+"Average rating: "+averageRating+"</p>" +
                 "<p class = \"card-text\">" + storyData.text + "</p>" +
-                "<button class= \"btn\" onclick=\'submitLike(1, \""+storyData._id+"\")\'>like (1) </button>" +
-                "<button class= \"btn\" onclick=\'submitLike(4, \""+storyData._id+"\")\'>like (4)</button>" +
+                //LIKE BUTTONS
+                "<div class=\"btn-group btn-group-toggle\" data-toggle=\"buttons\">"+
+                "<label class=\"btn btn-secondary active likeoption\" onclick=\"submitLike(1, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" id=\"option1\" autocomplete=\"off\" checked>1</label>"+
+                "<label class=\"btn btn-secondary likeoption\" onclick=\"submitLike(2, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" id=\"option2\" autocomplete=\"off\">2"+
+                "</label>"+
+                "<label class=\"btn btn-secondary likeoption\" onclick=\"submitLike(3, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" id=\"option3\" autocomplete=\"off\">3"+
+                "</label>"+
+                "<label class=\"btn btn-secondary likeoption\" onclick=\"submitLike(4, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" id=\"option4\" autocomplete=\"off\">4"+
+                "</label>"+
+                "</div>"+
                 "</div>";
         })
     });
@@ -121,4 +133,6 @@ function getDateStringFromStoryData(storyData){
 
     return dateString;
 }
+
+$().button('toggle')
 

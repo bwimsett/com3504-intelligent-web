@@ -77,6 +77,49 @@ function getLikesByStoryId(id, callback){
     }
 }
 
+/**
+ * Get all of a given user's likes
+ * @param userId
+ * @param callback
+ */
+function getLikesByUserId(userId, callback){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readonly');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            var index = store.index('_id');
+            var result = index.getAll();
+            return result;
+        }).then(function (results) {
+            var output = [];
+
+            for (var elem of results) {
+                if (elem.user_id == userId) {
+                    output.push(elem);
+                }
+            }
+
+            return callback(output);
+        });
+    }
+}
+
+/**
+ * If a user has already liked a given post, return the like.
+ * @param storyId
+ * @param userId
+ * @returns {null}
+ */
+function getLikeByStoryAndUser(storyId, userId, callback){
+    getLikesByUserId(userId, function(userLikes){
+        for(var elem in userLikes){
+            if(elem._id == storyId){
+                callback(elem);
+            }
+        }
+    });
+}
+
 function getAverageRatingForStory(storyId, callback){
     getLikesByStoryId(storyId, function(results){
         var total = 0;
