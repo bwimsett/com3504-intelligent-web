@@ -36,7 +36,7 @@ function initDatabase(){
             likesDB.createIndex('story_id', "story_id");
             // Index for searching likes by user
             likesDB.createIndex('user_id', "user_id");
-            console.log("Initialised User DB");
+            console.log("Initialised Likes DB");
         }
     });
 }
@@ -73,24 +73,33 @@ function cacheStory(storyObject, callback) {
 
 function cacheLike(likeObject) {
     console.log('inserting like: '+JSON.stringify(likeObject));
-    // Attempt to use Indexed DB
-    if (dbPromise) {
-        // Try pushing to indexed db
-        dbPromise.then(async db => {
-            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
-            var store = tx.objectStore(LIKES_STORE_NAME);
-            await store.put(likeObject);
-            return tx.complete;
-            // Then output success
-        }).then(function () {
-            console.log('added like to the indexeddb store! '+ JSON.stringify(likeObject));
-            // If there's an error. store the item in local storage
-        }).catch(function () {
-            localStorage.setItem(likeObject, JSON.stringify(likeObject));
-            console.log("added like to local storage")
-        });
-    } // Otherwise us localstorage
-    else localStorage.setItem(likeObject, JSON.stringify(likeObject));
+    // Check like doesn't already exist
+    getLikeByStoryAndUser(likeObject.story_id, likeObject.user_id, function(existingLike){
+        // Remove the old like
+        if(existingLike) {
+            removeLike(existingLike._id);
+        }
+
+        // Insert a new one
+        if (dbPromise) {
+            // Try pushing to indexed db
+            dbPromise.then(async db => {
+                var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+                var store = tx.objectStore(LIKES_STORE_NAME);
+                await store.put(likeObject);
+                return tx.complete;
+                // Then output success
+            }).then(function () {
+                console.log('added like to the indexeddb store '+ JSON.stringify(likeObject));
+                // If there's an error. store the item in local storage
+             }).catch(function () {
+                localStorage.setItem(likeObject, JSON.stringify(likeObject));
+                console.log("added like to local storage")
+            });
+         } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
+    });
+
+
 }
 
 function cacheUsers(usersList){
@@ -184,11 +193,6 @@ function displayCachedStories() {
         }).then(function (resultList) {
             displayStories(resultList);
         });
-    } else {
-        const value = localStorage.getItem(/*city*/);
-        if (value == null)
-            createStoryCard( {/*city: city, date: date*/});
-        else createStoryCard(value);
     }
 }
 
@@ -196,7 +200,6 @@ function clearCachedStories(callback){
     // If the indexed DB is set up
     if (dbPromise) {
         dbPromise.then(function (db) {
-            console.log('fetching stories');
             // Get the story store
             var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
             var store = tx.objectStore(STORY_STORE_NAME);
@@ -206,11 +209,22 @@ function clearCachedStories(callback){
             console.log("Cleared cached stories");
             callback();
         });
-    } else {
-        const value = localStorage.getItem(/*city*/);
-        if (value == null)
-            createStoryCard( {/*city: city, date: date*/});
-        else createStoryCard(value);
+    }
+}
+
+function clearCachedLikes(callback){
+    // If the indexed DB is set up
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            // Get the story store
+            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+
+            store.clear();
+        }).then(function(){
+            console.log("Cleared cached likes");
+            callback();
+        });
     }
 }
 

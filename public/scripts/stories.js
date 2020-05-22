@@ -17,6 +17,7 @@ function createStoryCard(storyData) {
     getUserById(storyData.user_id, function(user){
         // Create a story card, and add it to the container
         const storyCard = document.createElement("div");
+        storyCard.id = "story"+storyData._id;
         storyContainer.appendChild(storyCard);
 
         getAverageRatingForStory(storyData._id, function(averageRating){
@@ -27,11 +28,38 @@ function createStoryCard(storyData) {
                 "<h5 class=\"card-title\">" + user.username+"</h5>" +
                 "<p class =\"mb-2 text-muted\">"+getDateStringFromStoryData(storyData)+" | "+"Average rating: "+averageRating+"</p>" +
                 "<p class = \"card-text\">" + storyData.text + "</p>" +
-                "<button class= \"btn\" onclick=\'submitLike(1, \""+storyData._id+"\")\'>like (1) </button>" +
-                "<button class= \"btn\" onclick=\'submitLike(4, \""+storyData._id+"\")\'>like (4)</button>" +
+                //LIKE BUTTONS
+                "<div class=\"btn-group btn-group-toggle\" data-toggle=\"buttons\">"+
+                "<label class=\"btn btn-secondary likeoption option1\" onclick=\"submitLike(1, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\" checked>1</label>"+
+                "<label class=\"btn btn-secondary likeoption option2\" onclick=\"submitLike(2, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\">2"+
+                "</label>"+
+                "<label class=\"btn btn-secondary likeoption option3\" onclick=\"submitLike(3, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\">3"+
+                "</label>"+
+                "<label class=\"btn btn-secondary likeoption option4\" onclick=\"submitLike(4, \'"+storyData._id+"\')\">"+
+                "<input type=\"radio\" name=\"options\" autocomplete=\"off\">4"+
+                "</label>"+
+                "</div>"+
                 "</div>";
         })
+
+        getLikeByStoryAndUser(storyData._id, storyData.user_id, function(like){
+            if(!like){
+                return;
+            }
+
+            highlightLikeButton(storyData._id, like.rating);
+        });
     });
+}
+
+function highlightLikeButton(storyId, buttonValue){
+    var card = $("#story"+storyId);
+    var buttonClass = $("#option"+buttonValue);
+    var button = card.find(buttonClass);
+    button.addClass("active");
 }
 
 /**
@@ -121,4 +149,6 @@ function getDateStringFromStoryData(storyData){
 
     return dateString;
 }
+
+$().button('toggle')
 
