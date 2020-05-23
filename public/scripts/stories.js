@@ -43,23 +43,24 @@ function createStoryCard(storyData) {
                 "</label>"+
                 "</div>"+
                 "</div>";
-        })
 
-        getLikeByStoryAndUser(storyData._id, storyData.user_id, function(like){
-            if(!like){
-                return;
-            }
+            var currentUser = JSON.parse(getCurrentUser());
 
-            highlightLikeButton(storyData._id, like.rating);
+            getLikeByStoryAndUser(storyData._id, currentUser._id, function(like){
+                if(!like){
+                    return;
+                }
+
+                highlightLikeButton(storyData._id, like.rating);
+            });
         });
     });
 }
 
 function highlightLikeButton(storyId, buttonValue){
     var card = $("#story"+storyId);
-    var buttonClass = $("#option"+buttonValue);
-    var button = card.find(buttonClass);
-    button.addClass("active");
+    var buttonClass = $(".option"+buttonValue);
+    var button = card.find(buttonClass).addClass('active');
 }
 
 /**
