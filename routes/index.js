@@ -12,11 +12,6 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: ' PWA Project' });
 });
 
-/* GET Stories page */
-router.get('/stories', function(req, res, next){
-    res.render('stories', { title: "'s Stories" });
-});
-
 /* GET register page */
 router.get('/register', function(req, res, next){
     res.render('register');
@@ -50,7 +45,7 @@ router.post('/register', userController.insert);
 router.post('/login', userController.findUser);
 
 router.get('/home', function (req, res, next) {
-res.render('home', { title: 'Dashboard' });
+res.render('stories', { title: 'Dashboard' });
 });
 
 router.get('/likes', function (req, res, next) {

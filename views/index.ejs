@@ -46,21 +46,30 @@
 </head>
 <body onload="reIfLogged()">
 
-<div class="container" style="width: 100%">
-    <div class="row">
-        <div class="col-xs-10"><h1><%= title %></h1></div>
+<nav class="navbar navbar-expand-lg  navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">Social Media App</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+        </ul>
     </div>
+</nav>
 
+
+<div class="container" style="width: 100%">
 
     <div class="bodywrapper">
+        <h1>Welcome</h1>
         <section class="buttonwrapper">
-            <div class="signup">
-                <h1>Not a member?</h1>
-                <h2><a href="/register">Sign Up</a></h2>
+            <div class="card frontpage_card">
+                <h2 class = "card-title">Not a member?</h2>
+                <a href="/register"><button class ="btn btn-primary frontpage_btn">Sign Up</button></a>
             </div>
-            <div class="login">
-                <h1>Already a member?</h1>
-                <h2><a href="/login">Log In</a></h2>
+            <div class="card frontpage_card">
+                <h2 class="card-title">Already a member?</h2>
+                <a href="/login"><button class="btn btn-primary frontpage_btn">Log In</button></a>
             </div>
         </section>
     <div class="offline_div" id="offline_div" style="display: none">You are offline</div>
