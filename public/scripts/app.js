@@ -273,6 +273,7 @@ function reIfLogged(){
         }
 
     }
+    var i = userController.getAll;
 
 
 }
@@ -343,6 +344,7 @@ function loginUser(user){
             }else{
                 window.location.reload();
                 localStorage.setItem('currentUser', JSON.stringify(response));
+
                 console.log("USER LOGGING IN: "+response._id);
                 window.location.replace("./home");
             }
@@ -355,9 +357,11 @@ function loginUser(user){
 
         // the request to the server has failed. Display the cached data instead.
         error: function (xhr, status, error) {
-            alert("incorrect details");
+            console.log("server request failed",error);
+            loginUserOffline(user);
             window.location.reload();
-            console.log("ajax post failed",error);
+
+
         }
     });
 }

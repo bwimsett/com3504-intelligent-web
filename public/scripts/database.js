@@ -134,12 +134,14 @@ function loginUserOffline(userObj){
             if (foundObject && (foundObject.username==userObj.username &&
                 foundObject.password==userObj.password)){
 
-                console.log("login success");
+                console.log("Offline login - logged in successfully through cache");
                 localStorage.setItem('currentUser',JSON.stringify(foundObject));
                 window.location.reload();
 
             } else {
-                alert("login or password incorrect")
+
+                console.log("login through cache failed");
+
             }
         });
     }
@@ -171,6 +173,23 @@ function getUserById(id, callback){
                 console.log("No user with id: " + id + " found");
             });
         }
+}
+
+/**
+ * Retrieves users
+ */
+function getAllUsers(){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(USER_STORE_NAME, 'readonly');
+            var store = tx.objectStore(USER_STORE_NAME);
+            var index = store.index('_id');
+            var result = index.getAll();
+            return result;
+        }).then(function (results) {
+            return results;
+        });
+    }
 }
 
 /**

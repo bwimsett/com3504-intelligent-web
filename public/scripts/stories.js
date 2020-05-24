@@ -109,6 +109,70 @@ function sortStories(stories){
     return sorted;
 }
 
+class StoryScore{
+    constructor(story, score){
+        this.story = story;
+        this.score = score;
+    }
+}
+
+
+function sortStoriesRec(stories){
+
+    var unsorted = [];
+
+    if (stories == null){
+        return stories;
+    }else{
+        for(var story of stories){
+            var score = getStoryScore(story._id);
+            var storyScore = new StoryScore(story, score);
+            unsorted.push(storyScore);
+        }
+    }
+
+    var sorted = [];
+
+    while(unsorted.length > 0){
+
+        console.log(unsorted.length);
+        var current;
+        if(unsorted.length > 1) {
+            current = unsorted.shift();
+        } else {
+            current = unsorted.pop();
+        }
+
+        // If the sorted list is empty
+        if(sorted.length == 0){
+            sorted.push(current);
+            continue;
+        }
+
+        // Loop through sorted list
+        for(i = 0; i < sorted.length; i++){
+            // Insert if the date is greater than or equal to the current date
+            if(sorted[i].score <= current.score){
+                sorted.splice(i, 0, current);
+                break;
+            }
+
+            // if it has reached the end without insertion
+            if(i == sorted.length-1){
+                sorted.push(current);
+                break;
+            }
+        }
+    }
+
+    for(var story of sorted){
+        story = story.story;
+    }
+
+
+    return sorted;
+}
+
 function displayStories(stories){
     clearStoriesContainer();
 
