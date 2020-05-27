@@ -113,7 +113,7 @@ function getStoryLikes(id, likes){
  * @param userId
  */
 
-function getRa(userId, likes){
+function getAV(userId, likes){
     var userLikes = getUserLikes(userId, likes);
     var average = 0;
 
@@ -182,19 +182,11 @@ function getSimilarity(user, likes){
         }
 
     }
-    console.log("sum1: " + sum1);
-    console.log("sum2: " + sum2);
-    console.log("sum1sq: " + sum1sq);
-    console.log("sum2sq: " + sum2sq);
-    console.log("psum: " + psum);
-    console.log("n: " + n);
+
 
     //sim_pearson
     var num = psum-(sum1*sum2/n);
     var den=Math.sqrt((sum1sq-Math.pow(sum1,2)/n)*(sum2sq-Math.pow(sum2,2)/n));
-
-    console.log("num: " + num);
-    console.log("den: " + den);
 
     if (den == 0){
         score = 0;
@@ -207,8 +199,7 @@ function getSimilarity(user, likes){
 function getStoryScore(storyId, users, likes){
     var score = 0;
     var userA = JSON.parse(getCurrentUser());
-    var rA = getRa(userA._id, likes);
-    console.log("Ra is " + rA);
+    var rA = getAV(userA._id, likes);
 
     var sumWAU = 0;
     var n = 0;
@@ -218,15 +209,12 @@ function getStoryScore(storyId, users, likes){
     for (var user of users) {
         if (user._id != userA._id){
             var rU = getRu(storyId, user._id, likes);
-            console.log(user.username + "'s rating for story: " + storyId + " is " + rU);
 
             if (rU != null){
-                var norm = normaliseScore(rU, getStoryAverage(storyId, likes))
-                console.log(user.username + " - norm : " + norm);
+                var norm = normaliseScore(rU, getAV(user._id, likes))
 
 
                 var similarity = getSimilarity(user, likes);
-                console.log(user.username + " - similarity : " + similarity);
 
                 sumWAU += similarity;
 
@@ -242,14 +230,9 @@ function getStoryScore(storyId, users, likes){
 
 
     if (n != 0) {
-        sumWAU = sumWAU / n;
-        topSum = topSum / n;
         score = rA + (topSum/sumWAU);
     }
 
-    console.log("sumWAU: " + sumWAU);
-    console.log("topSum: " + topSum);
-    console.log("score: " + score);
     return score;
 
 }
@@ -260,7 +243,7 @@ function getStoryScore(storyId, users, likes){
  * @param userId
  */
 function normaliseScore(rU, AvRu){
-    return Math.abs(rU - AvRu);
+    return rU - AvRu;
 }
 
 
