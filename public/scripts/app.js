@@ -273,7 +273,6 @@ function reIfLogged(){
         }
 
     }
-    var i = userController.getAll;
 
 
 }
@@ -286,7 +285,6 @@ function logout(){
 
 function getCurrentUser(){
     var currentUser = localStorage.getItem('currentUser');
-    console.log("Current user: "+currentUser);
     return currentUser;
 }
 
