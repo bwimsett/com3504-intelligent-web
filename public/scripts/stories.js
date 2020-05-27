@@ -118,7 +118,7 @@ class StoryScore{
 }
 
 
-function sortStoriesX(stories, callback){
+function sortStoriesRec(stories, callback){
 
     getAllUsers(function (users) {
         getLikes( function (likes) {
@@ -189,10 +189,10 @@ function sortStoriesX(stories, callback){
 
 function displayStories(stories){
     clearStoriesContainer();
-    var order = 1;
+    var toggle = JSON.parse(localStorage.getItem('toggle'));
     // Sort the results
-    if (order == 1){
-        sortStoriesX(stories, function (sorted) {
+    if (toggle == "recommended"){
+        sortStoriesRec(stories, function (sorted) {
             // Output every matching result to the page
             if (sorted && sorted.length>0) {
                 for (var elem of sorted)
