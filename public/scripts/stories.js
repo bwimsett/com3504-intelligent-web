@@ -72,6 +72,7 @@ function sortStories(stories){
     }
 
     var unsorted = stories;
+
     var sorted = [];
 
     while(unsorted.length > 0){
@@ -117,73 +118,101 @@ class StoryScore{
 }
 
 
-function sortStoriesRec(stories){
+function sortStoriesRec(stories, callback){
 
-    var unsorted = [];
+    getAllUsers(function (users) {
 
-    if (stories == null){
-        return stories;
-    }else{
-        for(var story of stories){
-            var score = getStoryScore(story._id);
-            var storyScore = new StoryScore(story, score);
-            unsorted.push(storyScore);
-        }
-    }
+        getLikes( function (likes) {
+            console.log("users length: " + users.length);
+            console.log("likes length: " + likes.length);
+            var unsorted = [];
+            var sorted = [];
 
-    var sorted = [];
+            if (stories == null){
+                return stories;
+            }else{
+                for(var story of stories){
+                    var score = getStoryScore(story._id, users, likes);
+                    var storyScore = new StoryScore(story, score);
+                    unsorted.push(storyScore);
+                    console.log("Score for story:" + story._id + " is = " + score);
 
-    while(unsorted.length > 0){
-
-        console.log(unsorted.length);
-        var current;
-        if(unsorted.length > 1) {
-            current = unsorted.shift();
-        } else {
-            current = unsorted.pop();
-        }
-
-        // If the sorted list is empty
-        if(sorted.length == 0){
-            sorted.push(current);
-            continue;
-        }
-
-        // Loop through sorted list
-        for(i = 0; i < sorted.length; i++){
-            // Insert if the date is greater than or equal to the current date
-            if(sorted[i].score <= current.score){
-                sorted.splice(i, 0, current);
-                break;
+                }
             }
 
-            // if it has reached the end without insertion
-            if(i == sorted.length-1){
-                sorted.push(current);
-                break;
+            while(unsorted.length > 0){
+
+                console.log(unsorted.length);
+
+                var current;
+                if(unsorted.length > 1) {
+                    current = unsorted.shift();
+                } else {
+                    current = unsorted.pop();
+                }
+
+
+                // If the sorted list is empty
+                if(sorted.length == 0){
+                    sorted.push(current);
+                    continue;
+                }
+
+                // Loop through sorted list
+                for(i = 0; i < sorted.length; i++){
+                    // Insert if the date is greater than or equal to the current date
+                    if(sorted[i].score <= current.score){
+                        sorted.splice(i, 0, current);
+                        break;
+                    }
+
+                    // if it has reached the end without insertion
+                    if(i == sorted.length-1){
+                        sorted.push(current);
+                        break;
+                    }
+                }
             }
-        }
-    }
 
-    for(var story of sorted){
-        story = story.story;
-    }
+            var result = []
+
+            for(var story of sorted){
+                story = result.push(story.story);
+            }
+
+            return callback(result);
 
 
-    return sorted;
+        })
+    })
+
 }
 
 function displayStories(stories){
     clearStoriesContainer();
-
+    var toggle = JSON.parse(localStorage.getItem('toggle'));
     // Sort the results
-    var sorted = sortStories(stories);
+    if (toggle == "recommended"){
+        sortStoriesRec(stories, function (sorted) {
+            // Output every matching result to the page
+            if (sorted && sorted.length>0) {
+                for (var elem of sorted)
+                    createStoryCard(elem);
+            }
 
-    // Output every matching result to the page
-    if (sorted && sorted.length>0) {
-        for (var elem of sorted)
-            createStoryCard(elem);
+        });
+
+    }else{
+        var sorted = sortStories(stories);
+        // Output every matching result to the page
+        if (sorted && sorted.length>0) {
+            for (var elem of sorted)
+                createStoryCard(elem);
+        }
     }
+
+
+
 }
 
 function clearStoriesContainer(){
