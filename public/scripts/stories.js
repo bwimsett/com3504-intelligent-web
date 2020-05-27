@@ -121,6 +121,7 @@ class StoryScore{
 function sortStoriesRec(stories, callback){
 
     getAllUsers(function (users) {
+
         getLikes( function (likes) {
             console.log("users length: " + users.length);
             console.log("likes length: " + likes.length);
@@ -198,6 +199,7 @@ function displayStories(stories){
                 for (var elem of sorted)
                     createStoryCard(elem);
             }
+
         });
 
     }else{
