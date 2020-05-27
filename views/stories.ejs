@@ -47,7 +47,7 @@
     <script src="/scripts/database.js"></script>
 
 </head>
-<body onload="initStories(), reIfLogged()">
+<body onload="initStories(), reIfLogged(), getSortingMethod()">
 
 
 <nav class="navbar navbar-expand-lg  navbar-dark bg-dark">
@@ -78,11 +78,20 @@
         <label for="New Story">Create a new story</label>
         <textarea class="form-control" id="newstory" rows="3" cols="50"></textarea>
         <br>
-        <button type="button" class="btn btn-primary" onclick="createPost()">Create Post</button>
+        <button type="button" class="btn btn-primary" onclick="createPost()" >Create Post</button>
+
     </form>
+    <br><br>
 
-
+    <div>
+        <select id="toggle" name="toggle" onchange="setSortingMethod()" >
+            <option value="date">date</option>
+            <option value="recommended">recommended</option>
+        </select>
+    </div>
+    <br>
     <div id="storyContainer">
+
     </div>
 </div>
 

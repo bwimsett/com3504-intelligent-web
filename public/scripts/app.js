@@ -137,6 +137,19 @@ function loadLikes(){
 
 }
 
+function setSortingMethod(){
+    var toggle = $('#toggle').val();
+    localStorage.setItem('toggle', JSON.stringify(toggle));
+    console.log(JSON.stringify(toggle))
+    window.location.reload();
+}
+
+function getSortingMethod() {
+    var toggle = JSON.parse(localStorage.getItem('toggle'));
+    console.log(toggle)
+    $('#toggle').val(toggle);
+}
+
 function refreshCachedUsers(){
     $.ajax({
         url: '/users_list',
