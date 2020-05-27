@@ -77,20 +77,55 @@ function getLikesByStoryId(id, callback){
     }
 }
 
+function getLikes(callback){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readonly');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            var index = store.index('_id');
+            var result = index.getAll();
+            return result;
+        }).then(function (results) {
+            return callback(results);
+        });
+    }
+}
+
+function getStoryLikes(id, likes){
+    var output = [];
+
+    for (var like of likes) {
+        var requestId = id;
+        var thisId = like._id;
+
+        if (like.story_id == id) {
+            output.push(like);
+
+        }
+    }
+    return output;
+
+
+}
+
 /**
  * Ra = average score given by user
  * @param userId
  */
 
-function getRa(userId){
-    getLikesByUserId(userId, function(likes){
-        var average = 0;
-        for(var like of likes){
-            average = average + like.rating
-        }
-        average = average/likes.length
-        return average;
-    });
+function getRa(userId, likes){
+    var userLikes = getUserLikes(userId, likes);
+    var average = 0;
+
+    for(var like of userLikes){
+        average = average + like.rating;
+    }
+    if (average == 0){
+        average = 2.5;
+    }else{
+        average = average/userLikes.length;
+    }
+    return average;
 
 }
 
@@ -98,13 +133,15 @@ function getRa(userId){
  * Ru = rating for story
  * @param userId
  */
-function getRu(storyId, userId){
-    getLikeByStoryAndUser(StoryId,  userId, function(like){
+function getRu(storyId, userId, likes){
+    var rating = null;
+    var like = getLike(storyId,  userId, likes);
+    if (like != null){
         return like.rating;
-    });
-    return null;
+    }else{
+        return null;
+    }
 }
-
 
 class similarity{
     constructor(user, score){
@@ -113,9 +150,9 @@ class similarity{
     }
 }
 
-function getSimilarity(user){
+function getSimilarity(user, likes){
     var userA = JSON.parse(getCurrentUser());
-    var userLikes = getLikesByUserId(userA._id);
+    var userLikes = getUserLikes(userA._id, likes);
 
     var sum1 = 0;
     var sum2 = 0;
@@ -124,76 +161,97 @@ function getSimilarity(user){
     var psum = 0;
     var n = 0;
 
+    var score = null;
+
     for (var likeA of userLikes) {
-        getLikeByStoryAndUser(likeA.story_id, user._id, function(likeU){
-            if(likeU != null){
+        var likeU = getLike(likeA.story_id, user._id, likes);
+        if(likeU != null){
 
-                //user ratings
-                var u1 = likeA.rating;
-                var u2 = likeU.rating;
+            //user ratings
+            var u1 = likeA.rating;
+            var u2 = likeU.rating;
 
-                //sim_pearson
-                sum1 += u1;
-                sum2 += u2;
-                sum1sq += Math.pow(u1, 2);
-                sum2sq += Math.pow(u2, 2);
-                psum += u1*u2
-                n += 1;
+            //sim_pearson
+            sum1 += u1;
+            sum2 += u2;
+            sum1sq += Math.pow(u1, 2);
+            sum2sq += Math.pow(u2, 2);
+            psum += u1*u2
+            n += 1;
 
-            }
-        });
+        }
 
     }
+    console.log("sum1: " + sum1);
+    console.log("sum2: " + sum2);
+    console.log("sum1sq: " + sum1sq);
+    console.log("sum2sq: " + sum2sq);
+    console.log("psum: " + psum);
+    console.log("n: " + n);
 
     //sim_pearson
-    var num=psum-(sum1*sum2/n);
+    var num = psum-(sum1*sum2/n);
     var den=Math.sqrt((sum1sq-Math.pow(sum1,2)/n)*(sum2sq-Math.pow(sum2,2)/n));
 
+    console.log("num: " + num);
+    console.log("den: " + den);
+
     if (den == 0){
-        score = null;
+        score = 0;
     }else{
-        score = (num/den)
+        score = (num/den);
     }
     return score;
 }
 
-function getStoryScore(storyId){
-    var users = getAllUsers();
+function getStoryScore(storyId, users, likes){
     var score = 0;
     var userA = JSON.parse(getCurrentUser());
-    var rA = getRa(UserA);
+    var rA = getRa(userA._id, likes);
+    console.log("Ra is " + rA);
 
     var sumWAU = 0;
     var n = 0;
     var topSum = 0;
 
+
     for (var user of users) {
-        var rU = getRu(storyId, user._id);
+        if (user._id != userA._id){
+            var rU = getRu(storyId, user._id, likes);
+            console.log(user.username + "'s rating for story: " + storyId + " is " + rU);
 
-        if (rU != null){
-            var norm = 0;
-            var averageRu = 0;
+            if (rU != null){
+                var norm = normaliseScore(rU, getStoryAverage(storyId, likes))
+                console.log(user.username + " - norm : " + norm);
 
-            getAverageRatingForStory(storyId, function (AvRu) {
-                norm = normaliseScore(rU, AvRu);
-                averageRu = AvRu;
-            });
 
-            var similarity = getSimilarity(user);
-            sumWAU += similarity;
+                var similarity = getSimilarity(user, likes);
+                console.log(user.username + " - similarity : " + similarity);
 
-            var top = norm*similarity;
-            topSum += top;
+                sumWAU += similarity;
 
-            n += 1;
+                var top = norm*similarity;
+                topSum += top;
+
+                n += 1;
+            }
         }
+
     }
-    sumWAU = sumWAU/n;
-    topSum = topSum/n;
 
-    score = rA + (topSum/sumWAU);
 
+
+    if (n != 0) {
+        sumWAU = sumWAU / n;
+        topSum = topSum / n;
+        score = rA + (topSum/sumWAU);
+    }
+
+    console.log("sumWAU: " + sumWAU);
+    console.log("topSum: " + topSum);
+    console.log("score: " + score);
     return score;
+
 }
 
 
@@ -201,8 +259,8 @@ function getStoryScore(storyId){
  * (Ru - Ra) = normalised score for a story/user
  * @param userId
  */
-function normaliseScore(RU, AvRu){
-    return Math.abs(Ra - AvRu);
+function normaliseScore(rU, AvRu){
+    return Math.abs(rU - AvRu);
 }
 
 
@@ -233,12 +291,35 @@ function getLikesByUserId(userId, callback){
     }
 }
 
+function getUserLikes(userId, likes){
+    var output = [];
+
+    for (var like of likes) {
+        if (like.user_id == userId) {
+            output.push(like);
+        }
+    }
+
+    return output;
+
+}
+
 /**
  * If a user has already liked a given post, return the like.
  * @param storyId
  * @param userId
  * @returns {null}
  */
+function getLike(storyId, userId, likes){
+    var userLikes = getUserLikes(userId, likes);
+    for(var elem of userLikes){
+        if(elem.story_id == storyId){
+            return elem;
+        }
+    }
+    return null;
+}
+
 function getLikeByStoryAndUser(storyId, userId, callback){
     getLikesByUserId(userId, function(userLikes){
         for(var elem of userLikes){
@@ -293,5 +374,15 @@ function getAverageRatingForStory(storyId, callback){
 
         return callback(total/results.length);
     });
+}
+
+function getStoryAverage(storyId, likes){
+    var results = getStoryLikes(storyId, likes);
+    var total = 0;
+
+    for(var elem of results){
+        total += elem.rating;
+    }
+    return total/results.length;
 }
 

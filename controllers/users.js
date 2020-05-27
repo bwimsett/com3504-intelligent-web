@@ -24,11 +24,12 @@ exports.findUser = function (req, res) {
                     // Define a user as JSON
                     if (user.password == userData.password){
                         console.log('password is correct');
+                        console.log("Logged in user ID: "+user._id);
                     }else{
                         res.status(500).send('Invalid data!');
                     }
                 }
-                console.log("Logged in user ID: "+user._id);
+
 
                 // Send the response
                 res.setHeader('Content-Type', 'application/json');

@@ -178,7 +178,7 @@ function getUserById(id, callback){
 /**
  * Retrieves users
  */
-function getAllUsers(){
+function getAllUsers(callback){
     if (dbPromise) {
         dbPromise.then(function (db) {
             var tx = db.transaction(USER_STORE_NAME, 'readonly');
@@ -187,10 +187,11 @@ function getAllUsers(){
             var result = index.getAll();
             return result;
         }).then(function (results) {
-            return results;
+            return callback(results);
         });
     }
 }
+
 
 /**
  * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
