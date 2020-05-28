@@ -263,7 +263,7 @@ function getDateStringFromStoryData(storyData){
         minutes = "0"+minutes;
     }
 
-    var dateString = ""+hours+":"+minutes+" "+dateValue.getDay()+"/"+dateValue.getMonth()+"/"+dateValue.getYear();
+    var dateString = ""+hours+":"+minutes+" "+dateValue.getDate()+"/"+(dateValue.getMonth()+1)+"/"+dateValue.getFullYear();
 
     return dateString;
 }
