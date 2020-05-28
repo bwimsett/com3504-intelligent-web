@@ -48,7 +48,7 @@ function createStoryCard(storyData) {
 
             var currentUser = JSON.parse(getCurrentUser());
 
-            createLikeSummaryButtons(storyData);
+            createLikeSummaryIcons(storyData);
 
             getLikeByStoryAndUser(storyData._id, currentUser._id, function(like){
                 if(!like){
@@ -61,19 +61,29 @@ function createStoryCard(storyData) {
     });
 }
 
-function createLikeSummaryButtons(storyData){
+/**
+ * Generates HTML for the like summary icons displayed beneath the like selection buttons
+ * @param storyData - The story for which icons will be generated.
+ */
+function createLikeSummaryIcons(storyData){
     getLikesByStoryId(storyData._id, function(likes){
         var summaryContainer = $(".likesummary"+storyData._id);
 
         // Create a button for each like
         for(var elem of likes){
             // Create blank tooltip
-            createLikeSummaryButton(summaryContainer, elem, elem.user_id);
+            createLikeSummaryIcon(summaryContainer, elem, elem.user_id);
         }
     });
 }
 
-function createLikeSummaryButton(container, like, userID){
+/**
+ * Creates a single like summary icon based on a like and userID of the liker.
+ * @param container - The JQuery DOM element containing the summary icon.
+ * @param like - The like JSON data
+ * @param userID - the ID string of the user which created the like.
+ */
+function createLikeSummaryIcon(container, like, userID){
     getUserById(userID, function(user){
         container.append("<a href=\"/profile/"+user.username+"\"><button class=\"likesummary btn btn-secondary\" data-placement=\"bottom\" data-toggle=\"tooltip\" title=\""+user.username+"\"><p>"+like.rating+"</p></button></a>");
         $('[data-toggle="tooltip"]').tooltip();
@@ -81,6 +91,11 @@ function createLikeSummaryButton(container, like, userID){
 
 }
 
+/**
+ * Highlights the like selection button corresponding to the current user's like.
+ * @param storyId - The story for which the button will be highlighted.
+ * @param buttonValue - The value of the like.
+ */
 function highlightLikeButton(storyId, buttonValue){
     var card = $("#story"+storyId);
     var buttonClass = $(".option"+buttonValue);
@@ -89,6 +104,7 @@ function highlightLikeButton(storyId, buttonValue){
 
 /**
  * Takes a list of stories and sorts them by chronological order (insertion sort)
+ * @param stories - A list of stories to be sorted.
  */
 function sortStories(stories){
     if (stories == null){
@@ -134,6 +150,9 @@ function sortStories(stories){
     return sorted;
 }
 
+/**
+ * Data class linking a story to a score.
+ */
 class StoryScore{
     constructor(story, score){
         this.story = story;
@@ -141,6 +160,11 @@ class StoryScore{
     }
 }
 
+/**
+ * Sorts the stories in order of preference based on the recommender.
+ * @param stories - a list of stories to sort.
+ * @param callback - the function to be called upon completion.
+ */
 function sortStoriesRec(stories, callback){
 
     getAllUsers(function (users) {
@@ -209,6 +233,10 @@ function sortStoriesRec(stories, callback){
 
 }
 
+/**
+ * Clears the story container and replaces it with the given list of stories.
+ * @param stories - a list of stories to be displayed.
+ */
 function displayStories(stories){
     clearStoriesContainer();
     var toggle = JSON.parse(localStorage.getItem('toggle'));
@@ -236,11 +264,19 @@ function displayStories(stories){
 
 }
 
+/**
+ * Removes all contents from the stories container on the page.
+ */
 function clearStoriesContainer(){
    var container = $('#storyContainer')[0];
    container.innerHTML = "";
 }
 
+/**
+ * Returns a date in string format to be displayed on a story card.
+ * @param storyData - the story from which the date will be extracted.
+ * @returns {string}
+ */
 function getDateStringFromStoryData(storyData){
     if(storyData.date_created == null){
         return;
@@ -265,6 +301,10 @@ function getDateStringFromStoryData(storyData){
     return dateString;
 }
 
+/**
+ * Displays all the stories for a given user on the page.
+ * @param username - the username of the user to display stories for.
+ */
 function displayStoriesForUser(username){
     getUserByUsername(username, function(user){
         getCachedStories(function(allStories){
@@ -283,7 +323,7 @@ function displayStoriesForUser(username){
 }
 
 /**
- * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
+ * Displays all the stories currently cached, regardless of user.
  */
 function displayCachedStories() {
     getCachedStories(function(results){
