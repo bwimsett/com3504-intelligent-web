@@ -8,7 +8,6 @@ function initStories() {
     // First load the data.
     loadData();
 
-
     // This is uncommented until the database is fully implemented.
     // loadData();
     if ('serviceWorker' in navigator) {
@@ -29,7 +28,7 @@ function initStories() {
         console.log('This browser doesn\'t support IndexedDB');
     }
 
-    displayCachedStories();
+    initNavbarProfileLink();
 }
 
 /**
@@ -93,6 +92,10 @@ function loadStories(){
 
     // Anything that happens after the ajax request goes here
 
+}
+
+function initNavbarProfileLink(){
+    $(".profileLink").prop("href", "profile/"+JSON.parse(getCurrentUser()).username);
 }
 
 /**

@@ -175,6 +175,18 @@ function getUserById(id, callback){
         }
 }
 
+function getUserByUsername(username, callback){
+    getAllUsers(function(usersList){
+        for(var elem of usersList){
+            if(elem.username == username){
+                return callback(elem);
+            }
+        }
+
+        return null;
+    });
+}
+
 /**
  * Retrieves users
  */
@@ -193,10 +205,7 @@ function getAllUsers(callback){
 }
 
 
-/**
- * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
- */
-function displayCachedStories() {
+function getCachedStories(callback){
     // If the indexed DB is set up
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -211,7 +220,7 @@ function displayCachedStories() {
             // Only get stories with user_id of 0
             return index.getAll(/*IDBKeyRange.only(0)*/);
         }).then(function (resultList) {
-            displayStories(resultList);
+            return callback(resultList);
         });
     }
 }

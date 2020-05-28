@@ -20,12 +20,12 @@ function createStoryCard(storyData) {
         storyCard.id = "story"+storyData._id;
         storyContainer.appendChild(storyCard);
 
-        getAverageRatingForStory(storyData._id, function(averageRating){
+        getDisplayAverageForStory(storyData._id, function(averageRating){
             // Set HTML
             storyCard.innerHTML =
                 "<div class=\"card storyCard\">" +
                 "<div class=\"card-body\">" +
-                "<h5 class=\"card-title\">" + user.username+"</h5>" +
+                "<a href=\"/profile/"+user.username+"\"><h5 class=\"card-title\">" + user.username+"</h5></a>" +
                 "<p class =\"mb-2 text-muted\">"+getDateStringFromStoryData(storyData)+" | "+"Average rating: "+averageRating+"</p>" +
                 "<p class = \"card-text\">" + storyData.text + "</p>" +
                 // LIKE BUTTONS
@@ -75,13 +75,11 @@ function createLikeSummaryButtons(storyData){
 
 function createLikeSummaryButton(container, like, userID){
     getUserById(userID, function(user){
-        container.append("<button class=\"likesummary btn btn-secondary\" data-placement=\"bottom\" data-toggle=\"tooltip\" title=\""+user.username+"\"><p>"+like.rating+"</p></button>");
+        container.append("<a href=\"/profile/"+user.username+"\"><button class=\"likesummary btn btn-secondary\" data-placement=\"bottom\" data-toggle=\"tooltip\" title=\""+user.username+"\"><p>"+like.rating+"</p></button></a>");
         $('[data-toggle="tooltip"]').tooltip();
     })
 
 }
-
-
 
 function highlightLikeButton(storyId, buttonValue){
     var card = $("#story"+storyId);
@@ -142,7 +140,6 @@ class StoryScore{
         this.score = score;
     }
 }
-
 
 function sortStoriesRec(stories, callback){
 
@@ -263,9 +260,35 @@ function getDateStringFromStoryData(storyData){
         minutes = "0"+minutes;
     }
 
-    var dateString = ""+hours+":"+minutes+" "+dateValue.getDay()+"/"+dateValue.getMonth()+"/"+dateValue.getYear();
+    var dateString = ""+hours+":"+minutes+" "+dateValue.getDate()+"/"+(dateValue.getMonth()+1)+"/"+dateValue.getFullYear();
 
     return dateString;
+}
+
+function displayStoriesForUser(username){
+    getUserByUsername(username, function(user){
+        getCachedStories(function(allStories){
+
+            var validStories  = [];
+
+            for(var elem of allStories){
+                if(elem.user_id == user._id){
+                    validStories.push(elem);
+                }
+            }
+
+            displayStories(validStories);
+        });
+    });
+}
+
+/**
+ * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
+ */
+function displayCachedStories() {
+    getCachedStories(function(results){
+        displayStories(results);
+    });
 }
 
 $().button('toggle')
