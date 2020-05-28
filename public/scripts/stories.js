@@ -103,7 +103,7 @@ function sortStories(stories){
 
     while(unsorted.length > 0){
 
-        console.log(unsorted.length);
+        //console.log(unsorted.length);
         var current;
         if(unsorted.length > 1) {
             current = unsorted.shift();
@@ -149,8 +149,6 @@ function sortStoriesRec(stories, callback){
     getAllUsers(function (users) {
 
         getLikes( function (likes) {
-            console.log("users length: " + users.length);
-            console.log("likes length: " + likes.length);
             var unsorted = [];
             var sorted = [];
 
@@ -161,14 +159,14 @@ function sortStoriesRec(stories, callback){
                     var score = getStoryScore(story._id, users, likes);
                     var storyScore = new StoryScore(story, score);
                     unsorted.push(storyScore);
-                    console.log("Score for story:" + story._id + " is = " + score);
+                    //console.log("Score for story:" + story._id + " is = " + score);
 
                 }
             }
 
             while(unsorted.length > 0){
 
-                console.log(unsorted.length);
+                //console.log(unsorted.length);
 
                 var current;
                 if(unsorted.length > 1) {

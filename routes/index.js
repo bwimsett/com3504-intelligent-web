@@ -44,13 +44,18 @@ router.post('/register', userController.insert);
 
 router.post('/login', userController.findUser);
 
+
+
+router.post('/addStoryId', storyController.insertId);
+
+router.post('/adduser', userController.insertId);
+
 router.get('/home', function (req, res, next) {
-res.render('stories', { title: 'Dashboard' });
+    res.render('stories', { title: 'Dashboard' });
 });
 
 router.get('/likes', function (req, res, next) {
     res.render('likes', { title: 'Likes' });
 });
-
 
 module.exports = router;

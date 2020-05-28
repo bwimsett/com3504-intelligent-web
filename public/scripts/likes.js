@@ -50,6 +50,29 @@ function submitLike(value, storyID){
     event.preventDefault();
 }
 
+function addLike(value, userId, storyID){
+
+    var like = new Like(value, userId, storyID);
+
+    const data = JSON.stringify(like)
+
+    $.ajax({
+        url: '/likes',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            // Display the output on the screen
+            console.log("like received");
+            // Cache the data for offline viewing
+            cacheLike(dataR);
+        }
+    });
+
+    // Prevent the page from refreshing and clearing the posts just loaded
+    event.preventDefault();
+}
+
 function getLikesByStoryId(id, callback){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -66,7 +89,7 @@ function getLikesByStoryId(id, callback){
                 var thisId = elem._id;
 
                 if (elem.story_id == id) {
-                    console.log("found user with ID: " + id);
+                    //console.log("found user with ID: " + id);
                     output.push(elem);
 
                 }
@@ -348,7 +371,7 @@ function getLikeById(likeId){
 
 function getAverageRatingForStory(storyId, callback){
     getLikesByStoryId(storyId, function(results){
-        console.log("Calculating average rating for story: "+storyId);
+        //console.log("Calculating average rating for story: "+storyId);
         var total = 0;
 
         for(var elem of results){
