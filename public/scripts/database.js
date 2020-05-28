@@ -134,12 +134,14 @@ function loginUserOffline(userObj){
             if (foundObject && (foundObject.username==userObj.username &&
                 foundObject.password==userObj.password)){
 
-                console.log("login success");
+                console.log("Offline login - logged in successfully through cache");
                 localStorage.setItem('currentUser',JSON.stringify(foundObject));
                 window.location.reload();
 
             } else {
-                alert("login or password incorrect")
+
+                console.log("login through cache failed");
+
             }
         });
     }
@@ -173,10 +175,37 @@ function getUserById(id, callback){
         }
 }
 
+function getUserByUsername(username, callback){
+    getAllUsers(function(usersList){
+        for(var elem of usersList){
+            if(elem.username == username){
+                return callback(elem);
+            }
+        }
+
+        return null;
+    });
+}
+
 /**
- * Retrieves the list of stories from the database. (Some references to the weather PWA are commented out. Need to be replaced)
+ * Retrieves users
  */
-function displayCachedStories() {
+function getAllUsers(callback){
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(USER_STORE_NAME, 'readonly');
+            var store = tx.objectStore(USER_STORE_NAME);
+            var index = store.index('_id');
+            var result = index.getAll();
+            return result;
+        }).then(function (results) {
+            return callback(results);
+        });
+    }
+}
+
+
+function getCachedStories(callback){
     // If the indexed DB is set up
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -191,7 +220,7 @@ function displayCachedStories() {
             // Only get stories with user_id of 0
             return index.getAll(/*IDBKeyRange.only(0)*/);
         }).then(function (resultList) {
-            displayStories(resultList);
+            return callback(resultList);
         });
     }
 }

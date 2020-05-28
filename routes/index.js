@@ -27,6 +27,12 @@ router.get('/login', function(req, res, next){
     res.render('login');
 });
 
+router.get('/profile/:id', function(req, res, next){
+    var username = req.params.id;
+
+    res.render('profile', {username: username});
+});
+
 router.post('/stories', storyController.getAll);
 
 /* POST Story data */
@@ -44,13 +50,16 @@ router.post('/register', userController.insert);
 
 router.post('/login', userController.findUser);
 
+router.post('/addStoryId', storyController.insertId);
+
+router.post('/adduser', userController.insertId);
+
 router.get('/home', function (req, res, next) {
-res.render('stories', { title: 'Dashboard' });
+    res.render('stories', { title: 'Dashboard' });
 });
 
 router.get('/likes', function (req, res, next) {
     res.render('likes', { title: 'Likes' });
 });
-
 
 module.exports = router;

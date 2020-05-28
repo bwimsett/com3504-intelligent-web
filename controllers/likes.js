@@ -17,7 +17,7 @@ exports.insert = function (req, res) {
             story_id: likeData.story_id
         };
 
-        console.log('received: ' + like);
+        //console.log('received: ' + like);
 
         var query = {user_id: likeData.user_id, story_id: likeData.story_id};
         var options = {upsert: true, new: true, useFindAndModify: false};
@@ -37,6 +37,7 @@ exports.insert = function (req, res) {
         res.status(500).send('error ' + e);
     }
 }
+
 
 exports.getAll = function (req, res) {
     Like.find({}, function(err, result) {

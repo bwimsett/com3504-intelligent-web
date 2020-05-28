@@ -1,11 +1,12 @@
+
 /**
  * called by the HTML onload
  * showing any cached stories and declaring the service worker
  */
+
 function initStories() {
     // First load the data.
     loadData();
-
 
     // This is uncommented until the database is fully implemented.
     // loadData();
@@ -27,7 +28,7 @@ function initStories() {
         console.log('This browser doesn\'t support IndexedDB');
     }
 
-    displayCachedStories();
+    initNavbarProfileLink();
 }
 
 /**
@@ -93,6 +94,10 @@ function loadStories(){
 
 }
 
+function initNavbarProfileLink(){
+    $(".profileLink").prop("href", "profile/"+JSON.parse(getCurrentUser()).username);
+}
+
 /**
  * Returns all the stories and associated users
  * @param user
@@ -137,6 +142,68 @@ function loadLikes(){
 
 }
 
+function addJsonData(){
+
+    getJsonData("/usersStoriesAndRatings.json", function(text){
+        var json = JSON.parse(text);
+        var users = json.users;
+
+        for (var user in users){
+            addUserJson(users[user].userId);
+            var ratings = users[user].ratings;
+            for (var rating in ratings){
+                addLike(ratings[rating].rating, users[user].userId, ratings[rating].storyId);
+            }
+        }
+
+        var stories = json.stories;
+
+        for (var story in stories){
+            sendStoryId(new StoryId(stories[story].storyId, stories[story].text, stories[story].userId));
+
+        }
+        console.log("json file added")
+    });
+
+}
+
+function getJsonData(path, callback) {
+    console.log("seeting f to file")
+    var f = new XMLHttpRequest();
+
+    console.log("getting file")
+    f.overrideMimeType("application/json");
+    f.open("GET", path, true);
+
+    console.log("getting state")
+    f.onreadystatechange = function() {
+        if (f.readyState === 4 && f.status == "200") {
+            callback(f.responseText);
+        }
+    }
+
+    f.send(null);
+}
+
+
+function addUserJson(userId){
+    var user = new User(userId, 123)
+    addUserId(user);
+}
+
+function setSortingMethod(){
+    var toggle = $('#toggle').val();
+    localStorage.setItem('toggle', JSON.stringify(toggle));
+    console.log(JSON.stringify(toggle))
+    window.location.reload();
+}
+
+function getSortingMethod() {
+    var toggle = JSON.parse(localStorage.getItem('toggle'));
+    console.log(toggle)
+    $('#toggle').val(toggle);
+}
+
 function refreshCachedUsers(){
     $.ajax({
         url: '/users_list',
@@ -165,6 +232,34 @@ function refreshCachedUsers(){
     });
 
     // Anything that happens after the ajax request goes here
+}
+
+
+/**
+ * Posts a story to /stories_list using ajax.
+ */
+function sendStoryId(story){
+    const data = JSON.stringify(story);
+
+    $.ajax({
+        url: '/addStoryId',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            // Display the output on the screen
+            console.log("response received");
+
+            // Cache the data for offline viewing
+            cacheStory(dataR, function () {
+                displayCachedStories();
+            });
+
+        }
+    });
+
+    // Prevent the page from refreshing and clearing the posts just loaded
+    event.preventDefault();
 }
 
 
@@ -218,6 +313,14 @@ function sendStory(story){
  */
 class Story{
     constructor(text, user_id){
+        this.text = text;
+        this.user_id = user_id;
+    }
+}
+
+class StoryId{
+    constructor(id, text, user_id){
+        this.id = id;
         this.text = text;
         this.user_id = user_id;
     }
@@ -285,7 +388,6 @@ function logout(){
 
 function getCurrentUser(){
     var currentUser = localStorage.getItem('currentUser');
-    console.log("Current user: "+currentUser);
     return currentUser;
 }
 
@@ -306,7 +408,7 @@ function register(){
     var un = $('#username').val();
     var pw = $('#password').val();
     var user = new User(un, pw);
-    addUser(user)
+    addUser(user);
 }
 
 function addUser(user){
@@ -320,6 +422,27 @@ function addUser(user){
             console.log("register sucessful, ID: "+user._id);
             alert("register successful");
             window.location.reload();
+        },
+
+        // the request to the server has failed. Display the cached data instead.
+        error: function (xhr, status, error) {
+            console.log("ajax post failed",error);
+        }
+    });
+}
+
+function addUserId(user){
+    var data = JSON.stringify(user);
+    console.log(data);
+    $.ajax({
+        url: '/adduser',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (response) {
+            console.log("register sucessful, ID: "+user._id);
+            //alert("register successful");
+            //window.location.reload();
         },
 
         // the request to the server has failed. Display the cached data instead.
@@ -343,6 +466,7 @@ function loginUser(user){
             }else{
                 window.location.reload();
                 localStorage.setItem('currentUser', JSON.stringify(response));
+
                 console.log("USER LOGGING IN: "+response._id);
                 window.location.replace("./home");
             }
@@ -355,9 +479,11 @@ function loginUser(user){
 
         // the request to the server has failed. Display the cached data instead.
         error: function (xhr, status, error) {
-            alert("incorrect details");
+            console.log("server request failed",error);
+            loginUserOffline(user);
             window.location.reload();
-            console.log("ajax post failed",error);
+
+
         }
     });
 }
