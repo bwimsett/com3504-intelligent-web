@@ -27,6 +27,12 @@ router.get('/login', function(req, res, next){
     res.render('login');
 });
 
+router.get('/profile/:id', function(req, res, next){
+    var username = req.params.id;
+
+    res.render('profile', {username: username});
+});
+
 router.post('/stories', storyController.getAll);
 
 /* POST Story data */
@@ -43,8 +49,6 @@ router.post('/users_list', userController.getAll);
 router.post('/register', userController.insert);
 
 router.post('/login', userController.findUser);
-
-
 
 router.post('/addStoryId', storyController.insertId);
 

@@ -369,7 +369,12 @@ function getLikeById(likeId){
     }
 }
 
-function getAverageRatingForStory(storyId, callback){
+/**
+ * Returns the average to be displayed on the story card. Not the average used in recommender.
+ * @param storyId
+ * @param callback
+ */
+function getDisplayAverageForStory(storyId, callback){
     getLikesByStoryId(storyId, function(results){
         //console.log("Calculating average rating for story: "+storyId);
         var total = 0;
@@ -378,7 +383,10 @@ function getAverageRatingForStory(storyId, callback){
             total += elem.rating;
         }
 
-        return callback(total/results.length);
+        var avg = ""+total/results.length;
+        avg = avg.substr(0, 3);
+
+        return callback(avg);
     });
 }
 
