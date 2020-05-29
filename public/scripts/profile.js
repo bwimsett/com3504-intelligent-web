@@ -1,4 +1,8 @@
+/**
+ * Handles profiles.
+ */
+
 function onLoadProfile(profileName){
-    initStories(),
-        displayStoriesForUser(profileName);
+    initStories(false);
+    displayStoriesForUser(profileName);
 }

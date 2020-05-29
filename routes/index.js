@@ -41,6 +41,8 @@ router.post('/stories_list', storyController.insert);
 /* POST Likes data */
 router.post('/likes', likeController.insert);
 
+router.post('/many_likes', likeController.insertMany);
+
 router.post('/retrieve_likes', likeController.getAll);
 
 /* POST all the user data to associate with stories */

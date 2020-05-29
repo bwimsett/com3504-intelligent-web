@@ -1,3 +1,7 @@
+/**
+ * Handles stories.
+ */
+
 let usersCache = [];
 
 /**
@@ -6,7 +10,7 @@ let usersCache = [];
  * @param userData  - data about the user that created the story
  */
 function createStoryCard(storyData) {
-    console.log("updating results");
+    //console.log("updating results");
 
     // Get the container for stories
     var storyContainer = $('#storyContainer')[0];
@@ -16,14 +20,14 @@ function createStoryCard(storyData) {
     }
     // Await callback to get the user associated with this post
 
-    console.log("Getting user id");
+    //console.log("Getting user id");
 
     getUserFromRamCache(storyData.user_id, function(user){
         // Create a story card, and add it to the container
         const storyCard = document.createElement("div");
         storyCard.id = "story"+storyData._id;
         storyContainer.appendChild(storyCard);
-        console.log("Getting average for story");
+        //console.log("Getting average for story");
 
         getLikesByStoryId(storyData._id, function(likes){
 
@@ -58,7 +62,7 @@ function createStoryCard(storyData) {
 
             createLikeSummaryIcons(storyData, likes);
 
-            console.log("Getting likes by story and user");
+            //console.log("Getting likes by story and user");
 
             for(var like of likes) {
                 if (like.user_id == currentUser._id) {
@@ -315,14 +319,12 @@ function getDateStringFromStoryData(storyData){
  */
 function displayStoriesForUser(username){
     getUserByUsername(username, function(user){
-        getCachedStories(function(allStories){
+        getCachedStoriesByUser(user._id,function(allStories){
 
             var validStories  = [];
 
             for(var elem of allStories){
-                if(elem.user_id == user._id){
-                    validStories.push(elem);
-                }
+                validStories.push(elem);
             }
 
             displayStories(validStories);
@@ -346,7 +348,7 @@ function displayCachedStories() {
 function getUserFromRamCache(userID, callback){
     for(var user of usersCache){
         if(user._id == userID){
-            console.log("Found user in ram cache");
+            //console.log("Found user in ram cache");
             return callback(user);
         }
     }
@@ -362,6 +364,73 @@ function getUserFromRamCache(userID, callback){
     });
 }
 
+/**
+ * Posts a story to /stories_list using ajax.
+ */
+function sendStoryId(story){
+    const data = JSON.stringify(story);
+
+    $.ajax({
+        url: '/addStoryId',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            // Display the output on the screen
+            console.log("response received");
+
+            cacheStories(dataR, function(){
+                displayCachedStories();
+            });
+        }
+    });
+
+    // Prevent the page from refreshing and clearing the posts just loaded
+    event.preventDefault();
+}
+
+
+/**
+ * Posts a story to /stories_list using ajax.
+ */
+function sendStory(story){
+    const data = JSON.stringify(story);
+
+    $.ajax({
+        url: '/stories_list',
+        data: data,
+        contentType: 'application/json',
+        type: 'POST',
+        success: function (dataR) {
+            // Display the output on the screen
+            console.log("response received");
+
+            // Cache the data for offline viewing
+            cacheStory(dataR, function () {
+                displayCachedStories();
+            });
+
+            // Hide the offline alert
+            if (document.getElementById('offline_div')!=null)
+                document.getElementById('offline_div').style.display='none';
+        },
+
+        // the request to the server has failed. Display the cached data instead.
+        error: function (xhr, status, error) {
+            showOfflineWarning();
+            console.log("ajax post failed",error);
+            //getCachedData(city, date);
+            const dvv= document.getElementById('offline_div');
+            if (dvv!=null)
+                dvv.style.display='block';
+        }
+    });
+
+    // Anything that happens after the ajax request goes here
+
+    // Prevent the page from refreshing and clearing the posts just loaded
+    event.preventDefault();
+}
 
 
 $().button('toggle')
