@@ -145,73 +145,77 @@ class StoryScore{
 
 
 function sortStoriesRec(stories, callback){
+    getLikes( function (likes) {
+        var unsorted = [];
+        var sorted = [];
+        var userA =  JSON.parse(getCurrentUser());
+        var av = getAV(userA._id, likes);
+        var rA = av.average; //average current user
+        var userALikes = av.userLikes;
+        var glikes = likes.reduce((r, a) => {
+            r[a.user_id] = [...r[a.user_id] || [], a];
+            return r;
+        }, {});
 
-    getAllUsers(function (users) {
+        //console.log(JSON.stringify(glikes[0]));
 
-        getLikes( function (likes) {
-            var unsorted = [];
-            var sorted = [];
-            var userA =  JSON.parse(getCurrentUser());
-            var av = getAV(userA._id, likes);
-            var rA = av.average; //average current user
-            var userLikes = av.userLikes;
+        if (stories == null){
+            return stories;
+        }else{
 
-            if (stories == null){
-                return stories;
-            }else{
-                for(var story of stories){
-                    var score = getStoryScore(story._id, users, likes, userLikes, rA);
-                    var storyScore = new StoryScore(story, score);
-                    unsorted.push(storyScore);
-                    console.log("==== Score for story:" + story._id + " is = " + score);
+            for(var story of stories){
+                //var score = getStoryScore(story._id, users, likes, userLikes, rA);
+                var score = getStoryScore(story._id, glikes, userALikes, rA);
+                var storyScore = new StoryScore(story, score);
+                unsorted.push(storyScore);
+                console.log("==== Score for story:" + story._id + " is = " + score);
 
-                }
+            }
+        }
+
+        while(unsorted.length > 0){
+
+            //console.log(unsorted.length);
+
+            var current;
+            if(unsorted.length > 1) {
+                current = unsorted.shift();
+            } else {
+                current = unsorted.pop();
             }
 
-            while(unsorted.length > 0){
 
-                //console.log(unsorted.length);
+            // If the sorted list is empty
+            if(sorted.length == 0){
+                sorted.push(current);
+                continue;
+            }
 
-                var current;
-                if(unsorted.length > 1) {
-                    current = unsorted.shift();
-                } else {
-                    current = unsorted.pop();
+            // Loop through sorted list
+            for(i = 0; i < sorted.length; i++){
+                // Insert if the date is greater than or equal to the current date
+                if(sorted[i].score <= current.score){
+                    sorted.splice(i, 0, current);
+                    break;
                 }
 
-
-                // If the sorted list is empty
-                if(sorted.length == 0){
+                // if it has reached the end without insertion
+                if(i == sorted.length-1){
                     sorted.push(current);
-                    continue;
-                }
-
-                // Loop through sorted list
-                for(i = 0; i < sorted.length; i++){
-                    // Insert if the date is greater than or equal to the current date
-                    if(sorted[i].score <= current.score){
-                        sorted.splice(i, 0, current);
-                        break;
-                    }
-
-                    // if it has reached the end without insertion
-                    if(i == sorted.length-1){
-                        sorted.push(current);
-                        break;
-                    }
+                    break;
                 }
             }
+        }
 
-            var result = []
+        var result = []
 
-            for(var story of sorted){
-                story = result.push(story.story);
-            }
+        for(var story of sorted){
+            story = result.push(story.story);
+        }
 
-            return callback(result);
+        return callback(result);
 
 
-        })
     })
 
 }

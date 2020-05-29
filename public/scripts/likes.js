@@ -1,3 +1,7 @@
+/**
+ * Handles likes.
+ */
+
 class Like{
     constructor(rating, user_id, story_id){
         this.rating = rating;
@@ -6,6 +10,11 @@ class Like{
     }
 }
 
+/**
+ * Sends an Ajax request with like data for a story sent by the PWA.
+ * @param value - the value of the like.
+ * @param storyID - the ID of the story.
+ */
 function submitLike(value, storyID){
 
     var currentUser = JSON.parse(getCurrentUser());
@@ -26,7 +35,7 @@ function submitLike(value, storyID){
             //createStoryCard(dataR);
 
             // Cache the data for offline viewing
-            cacheLike(dataR);
+            cacheLike(dataR, true);
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)
@@ -50,22 +59,32 @@ function submitLike(value, storyID){
     event.preventDefault();
 }
 
-function addLike(value, userId, storyID){
+/**
+ * Sends an Ajax request with like data from imported JSON file.
+ * @param value - the value of the like.
+ * @param userId - the ID of the user.
+ * @param storyID - the ID of the story.
+ */
+function addLikes(likes, userID){
 
-    var like = new Like(value, userId, storyID);
+    var likesOutput = [];
 
-    const data = JSON.stringify(like)
+    for(var l of likes){
+        likesOutput.push(new Like(l.rating-1, userID, l.storyId));
+    }
+
+    const data = JSON.stringify(likesOutput)
 
     $.ajax({
-        url: '/likes',
+        url: '/many_likes',
         data: data,
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
             // Display the output on the screen
-            console.log("like received");
+            console.log("likes received");
             // Cache the data for offline viewing
-            cacheLike(dataR);
+            cacheLikes(dataR, true);
         }
     });
 
@@ -73,6 +92,11 @@ function addLike(value, userId, storyID){
     event.preventDefault();
 }
 
+/**
+ * Returns a list of likes for the given story, from the database.
+ * @param id - the id of the story.
+ * @param callback - a function to be called upon completion.
+ */
 function getLikesByStoryId(id, callback){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -100,6 +124,10 @@ function getLikesByStoryId(id, callback){
     }
 }
 
+/**
+ * Gets all the likes in the database.
+ * @param callback - a function to be called upon completion.
+ */
 function getLikes(callback){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -114,22 +142,6 @@ function getLikes(callback){
     }
 }
 
-function getStoryLikes(id, likes){
-    var output = [];
-
-    for (var like of likes) {
-        var requestId = id;
-        var thisId = like._id;
-
-        if (like.story_id == id) {
-            output.push(like);
-
-        }
-    }
-    return output;
-
-
-}
 
 class Av{
     constructor(average, userLikes){
@@ -139,11 +151,10 @@ class Av{
 }
 
 /**
- * Ra = average score given by user
+ * Returns average score given by user and all users likes
  * @param userId
+ * @param likes
  */
-
-
 function getAV(userId, likes){
     //var userLikes = getUserLikes(userId, likes);
     var average = 0;
@@ -165,71 +176,6 @@ function getAV(userId, likes){
 
 }
 
-/**
- * Ru = rating for story
- * @param userId
- */
-function getRu(storyId, userId, likes){
-    var rating = null;
-    var like = getLike(storyId,  userId, likes);
-    if (like != null){
-        return like.rating;
-    }else{
-        return null;
-    }
-}
-
-/*function getSimilarity(user, likes){
-    var userA = JSON.parse(getCurrentUser());
-    var userLikes = getUserLikes(userA._id, likes);
-
-    var sum1 = 0;
-    var sum2 = 0;
-    var sum1sq = 0;
-    var sum2sq = 0;
-    var psum = 0;
-    var n = 0;
-
-    var score = 0;
-
-    for (var likeA of userLikes) {
-        var likeU = getLike(likeA.story_id, user._id, likes);
-        if(likeU != null){
-
-            //user ratings
-            var u1 = parseInt(likeA.rating);
-            var u2 = parseInt(likeU.rating);
-
-            //sim_pearson
-            sum1 += u1;
-            sum2 += u2;
-            sum1sq += Math.pow(u1, 2);
-            sum2sq += Math.pow(u2, 2);
-            psum += u1*u2
-            n += 1;
-
-        }
-
-    }
-
-
-
-    //sim_pearson
-    if (n != 0){
-        var num = psum-(sum1*sum2/n);
-        var den=Math.sqrt((sum1sq-Math.pow(sum1,2)/n)*(sum2sq-Math.pow(sum2,2)/n));
-        console.log("num:" + num + " | den: " + den);
-
-        if (den == 0){
-            score = 0;
-        }else{
-            score = (num/den);
-        }
-    }
-
-    return score;
-}*/
-
 class normSim{
     constructor(norm, similarity){
         this.norm = norm;
@@ -240,10 +186,11 @@ class normSim{
 /**
  * Returns score for the story.
  * @param storyId - the id of the story.
- * @param users - list of users.
- * @param likes - list of likes
+ * @param likes - list of users.
+ * @param currentUserLikes - current user likes
+ * @param currentUserAverage - current user average
  */
-function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAverage){
+function getStoryScore(storyId, likes, currentUserLikes, currentUserAverage){
 
     var score = 0; //score for story
 
@@ -257,15 +204,14 @@ function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAvera
     var topSum = 0; // sum(norm(user_rating - average_user_rating) * similarity))
 
     //loop through all users
-    for (var user of users) {
+    for (const [userId, userULikes] of Object.entries(likes)) {
         //check that user is not the (current user logged in)
-        if (user._id != userA._id){
+        if (userId != userA._id){
             //var rU = getRu(storyId, user._id, likes);
-            //console.log("RU: " + rU);
-
 
             // get norm and similarity
-            var normSim = getNormAndSim(storyId, user, likes, userALikes);
+            //var normSim = getNormAndSim(storyId, user, likes, userALikes);
+            var normSim = getNormAndSim(storyId, userULikes, userALikes);
             //check if null
             if (normSim != null){
                 //var norm = normaliseScore(rU, getAV(user._id, likes))
@@ -305,16 +251,16 @@ function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAvera
 
 
 /**
- * Returns score for the story.
+ * Returns normilisation for user U, and the similarity between user U and User A.
  * @param storyId - the id of the story.
- * @param user - user.
- * @param likes - list of likes
+ * @param userULikes - likes of user U
+ * @param userALikes - likes of current User
  */
-function getNormAndSim(storyId, user, likes, userLikes){
-
+//function getNormAndSim(storyId, user, likes, userLikes){
+function getNormAndSim(storyId, userULikes, userALikes){
     var userA = JSON.parse(getCurrentUser()); //current user
     //var userALikes = getUserLikes(userA._id, likes); // current user likes
-    var userALikes = userLikes;
+    //var userALikes = userLikes;
     var rU = null; // user rating for storyId
     var averageU = 0; // average user rating
     var norm = 0; // rU - averageU
@@ -330,36 +276,31 @@ function getNormAndSim(storyId, user, likes, userLikes){
 
     var score = 0; // similarity between current user and user
 
-    for (var like of likes){
-
-        if (like.user_id == user._id){
-            //
-
-            if (like.story_id == storyId){
-                // find rU - use rating for storyId
-                rU = like.rating;
-            }
-            // sum user ratings
-            averageU += like.rating;
-            un += 1;
-
-            // check if user and current user liked the same story - storyId
-            var likeA = getLike(like.story_id, userA._id, userALikes);
-            if (likeA != null){
-                //user ratings
-                var u1 = parseInt(likeA.rating);
-                var u2 = parseInt(like.rating);
-
-                //sim_pearson - equation for lecture
-                sum1 += u1;
-                sum2 += u2;
-                sum1sq += Math.pow(u1, 2);
-                sum2sq += Math.pow(u2, 2);
-                psum += u1*u2
-                n += 1;
-            }
+    for (var like of userULikes){
 
 
+        if (like.story_id == storyId){
+            // find rU - use rating for storyId
+            rU = like.rating;
+        }
+        // sum user ratings
+        averageU += like.rating;
+        un += 1;
+
+        // check if user and current user liked the same story - storyId
+        var likeA = getLike(like.story_id, userA._id, userALikes);
+        if (likeA != null){
+            //user ratings
+            var u1 = parseInt(likeA.rating);
+            var u2 = parseInt(like.rating);
+
+            //sim_pearson - equation for lecture
+            sum1 += u1;
+            sum2 += u2;
+            sum1sq += Math.pow(u1, 2);
+            sum2sq += Math.pow(u2, 2);
+            psum += u1*u2
+            n += 1;
         }
 
     }
@@ -391,18 +332,9 @@ function getNormAndSim(storyId, user, likes, userLikes){
 
 
 /**
- * (Ru - Ra) = normalised score for a story/user
- * @param userId
- */
-function normaliseScore(rU, AvRu){
-    return rU - AvRu;
-}
-
-
-/**
- * Get all of a given user's likes
- * @param userId
- * @param callback
+ * Get all of a given user's likes.
+ * @param userId - the id of the user.
+ * @param callback - a function to be called upon completion.
  */
 function getLikesByUserId(userId, callback){
     if (dbPromise) {
@@ -426,6 +358,13 @@ function getLikesByUserId(userId, callback){
     }
 }
 
+/**
+ * If a user has already liked a given post, return the like.
+ * @param storyId - the ID of the story.
+ * @param userId - the ID of the user.
+ * @param likes - list of likes.
+ */
+
 function getUserLikes(userId, likes){
     var output = [];
 
@@ -441,10 +380,11 @@ function getUserLikes(userId, likes){
 
 /**
  * If a user has already liked a given post, return the like.
- * @param storyId
- * @param userId
- * @returns {null}
+ * @param storyId - the ID of the story.
+ * @param userId - the ID of the user.
+ * @param likes - list of likes.
  */
+
 function getLike(storyId, userId, likes){
     var userLikes = getUserLikes(userId, likes);
     for(var elem of userLikes){
@@ -455,6 +395,12 @@ function getLike(storyId, userId, likes){
     return null;
 }
 
+/**
+ * Returns a like for a particular story by a user, if it exists.
+ * @param storyId - the id of the story.
+ * @param userId - the id of the user.
+ * @param callback - a function to be called upon completion.
+ */
 function getLikeByStoryAndUser(storyId, userId, callback){
     getLikesByUserId(userId, function(userLikes){
         for(var elem of userLikes){
@@ -467,6 +413,10 @@ function getLikeByStoryAndUser(storyId, userId, callback){
     });
 }
 
+/**
+ * Removes a given like from the database.
+ * @param likeId - the ID of the like to be removed.
+ */
 function removeLike(likeId){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -480,6 +430,10 @@ function removeLike(likeId){
     }
 }
 
+/**
+ * Returns a like with a given ID.
+ * @param likeId - the ID of the like.
+ */
 function getLikeById(likeId){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -498,26 +452,21 @@ function getLikeById(likeId){
     }
 }
 
-function getAverageRatingForStory(storyId, callback){
-    getLikesByStoryId(storyId, function(results){
-        //console.log("Calculating average rating for story: "+storyId);
-        var total = 0;
-
-        for(var elem of results){
-            total += elem.rating;
-        }
-
-        return callback(total/results.length);
-    });
-}
-
-function getStoryAverage(storyId, likes){
-    var results = getStoryLikes(storyId, likes);
+/**
+ * Returns the average to be displayed on the story card. Not the average used in recommender.
+ * @param storyId - the ID of the story to get an average for.
+ * @param callback - a function to be called upon completion.
+ */
+function getAverage(likes){
+    //console.log("Calculating average rating for story: "+storyId);
     var total = 0;
 
-    for(var elem of results){
+    for(var elem of likes){
         total += elem.rating;
     }
-    return total/results.length;
-}
 
+    var avg = ""+total/likes.length;
+    avg = avg.substr(0, 3);
+
+    return avg;
+}
