@@ -46,7 +46,7 @@ function initDatabase(){
  * @param storyObject
  */
 function cacheStory(storyObject, callback) {
-    console.log('inserting: '+JSON.stringify(storyObject));
+    //console.log('inserting: '+JSON.stringify(storyObject));
     // Attempt to use Indexed DB
     if (dbPromise) {
         // Try pushing to indexed db
@@ -54,52 +54,102 @@ function cacheStory(storyObject, callback) {
             var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
             var store = tx.objectStore(STORY_STORE_NAME);
             await store.put(storyObject);
-            console.log("added to indexdb")
+            //console.log("added to indexdb")
             return tx.complete;
             // Then output success
         }).then(function () {
-            console.log('added story to cache '+ JSON.stringify(storyObject));
+            //console.log('added story to cache '+ JSON.stringify(storyObject));
             if(callback != null){
                 callback();
             }
             // If there's an error. store the item in local storage
         }).catch(function () {
             localStorage.setItem(storyObject, JSON.stringify(storyObject));
-            console.log("added to local storage")
+            //console.log("added to local storage")
         });
     } // Otherwise us localstorage
     else localStorage.setItem(storyObject, JSON.stringify(storyObject));
 }
 
-function cacheLike(likeObject) {
-    console.log('inserting like: '+JSON.stringify(likeObject));
+function cacheLike(likeObject, update) {
+    // console.log('inserting like: '+JSON.stringify(likeObject));
     // Check like doesn't already exist
-    getLikeByStoryAndUser(likeObject.story_id, likeObject.user_id, function(existingLike){
-        // Remove the old like
-        if(existingLike) {
-            removeLike(existingLike._id);
-        }
+    if(update) {
+        getLikeByStoryAndUser(likeObject.story_id, likeObject.user_id, function (existingLike) {
+            // Remove the old like
+            if (existingLike) {
+                removeLike(existingLike._id);
+            }
 
-        // Insert a new one
-        if (dbPromise) {
-            // Try pushing to indexed db
-            dbPromise.then(async db => {
-                var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
-                var store = tx.objectStore(LIKES_STORE_NAME);
-                await store.put(likeObject);
-                return tx.complete;
-                // Then output success
-            }).then(function () {
-                console.log('added like to the indexeddb store '+ JSON.stringify(likeObject));
-                // If there's an error. store the item in local storage
-             }).catch(function () {
-                localStorage.setItem(likeObject, JSON.stringify(likeObject));
-                console.log("added like to local storage")
-            });
-         } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
-    });
+            cacheLikeWithoutUpdate(likeObject);
 
+            return;
+        });
+    }
 
+    cacheLikeWithoutUpdate(likeObject);
+}
+
+/**
+ * Caches multiple likes at once, faster performance than cacheLike
+ * @param likes
+ */
+function cacheLikes(likes){
+    if (dbPromise) {
+        // Try pushing to indexed db
+        dbPromise.then(async db => {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            for(var elem of likes) {
+                //console.log("caching like");
+                await store.put(elem);
+            }
+            return tx.complete;
+            // Then output success
+        }).catch(function () {
+            localStorage.setItem(likeObject, JSON.stringify(likeObject));
+            //console.log("added like to local storage")
+        });
+    } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
+}
+
+function cacheStories(stories, callback){
+    if (dbPromise) {
+        // Try pushing to indexed db
+        dbPromise.then(async db => {
+            var tx = db.transaction(STORY_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(STORY_STORE_NAME);
+            for (var elem of stories) {
+                //console.log("caching story");
+                await store.put(elem);
+            }
+            return tx.complete;
+        }).then(function(){
+            if(callback) {
+                return callback();
+            }
+        }).catch(function () {
+            localStorage.setItem(storyObject, JSON.stringify(storyObject));
+            //console.log("added to local storage")
+        });
+    } // Otherwise us localstorage
+    else localStorage.setItem(storyObject, JSON.stringify(storyObject));
+}
+
+function cacheLikeWithoutUpdate(likeObject){
+    if (dbPromise) {
+        // Try pushing to indexed db
+        dbPromise.then(async db => {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            await store.put(likeObject);
+            return tx.complete;
+            // Then output success
+        }).catch(function () {
+            localStorage.setItem(likeObject, JSON.stringify(likeObject));
+            //console.log("added like to local storage")
+        });
+    } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
 }
 
 function cacheUsers(usersList){
@@ -111,8 +161,8 @@ function cacheUsers(usersList){
 function cacheUserData(user){
     if (dbPromise) {
         dbPromise.then(async db  => {
-            console.log('inserting: '+JSON.stringify(user));
-            console.log("adding user to indexeddb store")
+            //console.log('inserting: '+JSON.stringify(user));
+            //console.log("adding user to indexeddb store")
             var tx = db.transaction(USER_STORE_NAME, 'readwrite');
             var store = tx.objectStore(USER_STORE_NAME);
             await store.put(user); // necessary as it returns a promise
@@ -158,19 +208,17 @@ function getUserById(id, callback){
                 var tx = db.transaction(USER_STORE_NAME, 'readonly');
                 var store = tx.objectStore(USER_STORE_NAME);
                 var index = store.index('_id');
-                var result = index.getAll();
+                var result = index.get(id);
                 return result;
-            }).then(function (results) {
-                for (var elem of results) {
-                    var requestId = id;
-                    var thisId = elem._id;
+            }).then(function (result) {
 
-                    if (elem._id == id) {
-                        console.log("found user with ID: " + id);
-                        return callback(elem);
-                    }
+                if(result){
+                    console.log("user with ID "+id+" found.");
+                    return callback(result);
                 }
+
                 console.log("No user with id: " + id + " found");
+                return callback(null);
             });
         }
 }

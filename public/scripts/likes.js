@@ -31,7 +31,7 @@ function submitLike(value, storyID){
             //createStoryCard(dataR);
 
             // Cache the data for offline viewing
-            cacheLike(dataR);
+            cacheLike(dataR, true);
 
             // Hide the offline alert
             if (document.getElementById('offline_div')!=null)
@@ -76,7 +76,7 @@ function addLike(value, userId, storyID){
             // Display the output on the screen
             console.log("like received");
             // Cache the data for offline viewing
-            cacheLike(dataR);
+            cacheLike(dataR, true);
         }
     });
 
@@ -409,20 +409,18 @@ function getLikeById(likeId){
  * @param storyId - the ID of the story to get an average for.
  * @param callback - a function to be called upon completion.
  */
-function getDisplayAverageForStory(storyId, callback){
-    getLikesByStoryId(storyId, function(results){
+function getAverage(likes){
         //console.log("Calculating average rating for story: "+storyId);
         var total = 0;
 
-        for(var elem of results){
+        for(var elem of likes){
             total += elem.rating;
         }
 
-        var avg = ""+total/results.length;
+        var avg = ""+total/likes.length;
         avg = avg.substr(0, 3);
 
-        return callback(avg);
-    });
+        return avg;
 }
 
 function getStoryAverage(storyId, likes){

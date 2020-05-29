@@ -62,13 +62,15 @@ function loadStories(){
                 return;
             }
 
+            clearStoriesContainer();
+
             // Clear the story cache, then fill it with the newly returned data
             clearCachedStories(function(){
                 var dataValue = dataR;
 
                 // Store the result data in a card on the page
                 $.each(dataR, function(index, element) {
-                    console.log(element);
+                    //console.log(element);
                     cacheStory(element);
                 });
             })
@@ -116,9 +118,12 @@ function loadLikes(){
             clearCachedLikes(function(){
                 var dataValue = dataR;
 
-                $.each(dataR, function(index, element) {
-                    cacheLike(element);
-                });
+                cacheLikes(dataR);
+
+                /*$.each(dataR, function(index, element) {
+                    console.log("caching like");
+                    cacheLike(element, false);
+                });*/
             })
 
             // Hide the 'offline' alert, as server request was successful
@@ -250,11 +255,9 @@ function sendStoryId(story){
             // Display the output on the screen
             console.log("response received");
 
-            // Cache the data for offline viewing
-            cacheStory(dataR, function () {
+            cacheStories(dataR, function(){
                 displayCachedStories();
             });
-
         }
     });
 
