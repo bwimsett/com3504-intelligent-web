@@ -1,12 +1,16 @@
+/**
+ * Handles AJAX requests and initialisation/basic features of the application.
+ */
+
 
 /**
  * called by the HTML onload
  * showing any cached stories and declaring the service worker
  */
 
-function initStories() {
+function initStories(displayStories) {
     // First load the data.
-    loadData();
+    loadData(displayStories);
 
     // This is uncommented until the database is fully implemented.
     // loadData();
@@ -34,25 +38,31 @@ function initStories() {
 /**
  * given a list of users, retrieve all the data from the server (or failing that) from the database.
  */
-function loadData(){
+function loadData(displayStories){
     refreshCachedUsers();
-    retrieveAllStoryData();
+    retrieveAllStoryData(displayStories);
 }
 
 /**
  * Cycles through the list of users and requests a story (or stories) from the server for each
  * user.
  */
-function retrieveAllStoryData(){
-    loadLikes();
-    loadStories();
+function retrieveAllStoryData(displayStories){
+    loadLikes(
+        loadStories(function(){
+            if(displayStories) {
+                displayCachedStories();
+            }
+        })
+    );
+
 }
 
 /**
  * Returns all the stories and associated users
  * @param user
  */
-function loadStories(){
+function loadStories(callback){
     $.ajax({
         url: '/stories',
         contentType: 'application/json',
@@ -64,15 +74,12 @@ function loadStories(){
 
             clearStoriesContainer();
 
+
+
             // Clear the story cache, then fill it with the newly returned data
             clearCachedStories(function(){
                 var dataValue = dataR;
-
-                // Store the result data in a card on the page
-                $.each(dataR, function(index, element) {
-                    //console.log(element);
-                    cacheStory(element);
-                });
+                cacheStories(dataR, callback);
             })
 
             // Hide the 'offline' alert, as server request was successful
@@ -104,7 +111,7 @@ function initNavbarProfileLink(){
  * Returns all the stories and associated users
  * @param user
  */
-function loadLikes(){
+function loadLikes(callback){
     $.ajax({
         url: '/retrieve_likes',
         contentType: 'application/json',
@@ -118,17 +125,12 @@ function loadLikes(){
             clearCachedLikes(function(){
                 var dataValue = dataR;
 
-                cacheLikes(dataR);
+                cacheLikes(dataR, callback);
+            });
 
-                /*$.each(dataR, function(index, element) {
-                    console.log("caching like");
-                    cacheLike(element, false);
-                });*/
-            })
-
-            // Hide the 'offline' alert, as server request was successful
-            /*if (document.getElementById('offline_div')!=null)
-                    document.getElementById('offline_div').style.display='none';*/
+            //Hide the 'offline' alert, as server request was successful
+            if (document.getElementById('offline_div')!=null)
+                    document.getElementById('offline_div').style.display='none';
         },
 
         // If the server request fails, show the cached data instead.
@@ -156,9 +158,7 @@ function addJsonData(){
         for (var user in users){
             addUserJson(users[user].userId);
             var ratings = users[user].ratings;
-            for (var rating in ratings){
-                addLike(ratings[rating].rating, users[user].userId, ratings[rating].storyId);
-            }
+            addLikes(ratings, users[user].userId);
         }
 
         var stories = json.stories;
@@ -189,7 +189,6 @@ function getJsonData(path, callback) {
 
     f.send(null);
 }
-
 
 function addUserJson(userId){
     var user = new User(userId, 123)
@@ -239,74 +238,6 @@ function refreshCachedUsers(){
     // Anything that happens after the ajax request goes here
 }
 
-
-/**
- * Posts a story to /stories_list using ajax.
- */
-function sendStoryId(story){
-    const data = JSON.stringify(story);
-
-    $.ajax({
-        url: '/addStoryId',
-        data: data,
-        contentType: 'application/json',
-        type: 'POST',
-        success: function (dataR) {
-            // Display the output on the screen
-            console.log("response received");
-
-            cacheStories(dataR, function(){
-                displayCachedStories();
-            });
-        }
-    });
-
-    // Prevent the page from refreshing and clearing the posts just loaded
-    event.preventDefault();
-}
-
-
-/**
- * Posts a story to /stories_list using ajax.
- */
-function sendStory(story){
-    const data = JSON.stringify(story);
-
-    $.ajax({
-        url: '/stories_list',
-        data: data,
-        contentType: 'application/json',
-        type: 'POST',
-        success: function (dataR) {
-            // Display the output on the screen
-            console.log("response received");
-
-            // Cache the data for offline viewing
-            cacheStory(dataR, function () {
-                displayCachedStories();
-            });
-
-            // Hide the offline alert
-            if (document.getElementById('offline_div')!=null)
-                document.getElementById('offline_div').style.display='none';
-        },
-
-        // the request to the server has failed. Display the cached data instead.
-        error: function (xhr, status, error) {
-            showOfflineWarning();
-            console.log("ajax post failed",error);
-            //getCachedData(city, date);
-            const dvv= document.getElementById('offline_div');
-            if (dvv!=null)
-                dvv.style.display='block';
-        }
-    });
-
-    // Anything that happens after the ajax request goes here
-
-    // Prevent the page from refreshing and clearing the posts just loaded
-    event.preventDefault();
-}
 
 
 ///////////////////////// INTERFACE MANAGEMENT ///////////////////////////
@@ -385,8 +316,7 @@ function reIfLogged(){
 
 function logout(){
     localStorage.removeItem("currentUser");
-    window.location.replace("./");
-
+    window.location.replace("/");
 }
 
 function getCurrentUser(){
@@ -457,7 +387,7 @@ function addUserId(user){
 
 function loginUser(user){
     var data = JSON.stringify(user);
-    console.log("running data" + data);
+    //console.log("running data" + data);
     $.ajax({
         url: '/login',
         data: data,
@@ -510,7 +440,6 @@ window.addEventListener('online', function(e) {
     hideOfflineWarning();
     loadData();
 }, false);
-
 
 function showOfflineWarning(){
     if (document.getElementById('offline_div')!=null)

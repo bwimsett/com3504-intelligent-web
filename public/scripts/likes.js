@@ -1,3 +1,7 @@
+/**
+ * Handles likes.
+ */
+
 class Like{
     constructor(rating, user_id, story_id){
         this.rating = rating;
@@ -61,22 +65,26 @@ function submitLike(value, storyID){
  * @param userId - the ID of the user.
  * @param storyID - the ID of the story.
  */
-function addLike(value, userId, storyID){
+function addLikes(likes, userID){
 
-    var like = new Like(value, userId, storyID);
+    var likesOutput = [];
 
-    const data = JSON.stringify(like)
+    for(var l of likes){
+        likesOutput.push(new Like(l.rating-1, userID, l.storyId));
+    }
+
+    const data = JSON.stringify(likesOutput)
 
     $.ajax({
-        url: '/likes',
+        url: '/many_likes',
         data: data,
         contentType: 'application/json',
         type: 'POST',
         success: function (dataR) {
             // Display the output on the screen
-            console.log("like received");
+            console.log("likes received");
             // Cache the data for offline viewing
-            cacheLike(dataR, true);
+            cacheLikes(dataR, true);
         }
     });
 

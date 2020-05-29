@@ -38,6 +38,39 @@ exports.insert = function (req, res) {
     }
 }
 
+exports.insertMany = function (req, res){
+    var likeData = req.body;
+    if (likeData == null) {
+        // Display 403 error page if the data is empty
+        res.status(403).send('No data sent!')
+    }
+    try {
+        var likes = [];
+
+        for(var like of likeData){
+            likes.push({
+                rating: like.rating,
+                date_created: Date.now(),
+                user_id: like.user_id,
+                story_id: like.story_id
+            })
+        }
+
+        // Save the like to the database, update an old version if it exists
+        Like.insertMany(likes, function(err, result){
+            if(err){
+                console.log(err);
+                return res.send({ error: err });
+            }
+
+            return res.send("succesfully saved");
+        });
+    } catch (e) {
+        // Display 500 error page if there was a problem with the request
+        res.status(500).send('error ' + e);
+    }
+}
+
 
 exports.getAll = function (req, res) {
     Like.find({}, function(err, result) {
