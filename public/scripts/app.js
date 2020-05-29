@@ -8,9 +8,13 @@
  * showing any cached stories and declaring the service worker
  */
 
-function initStories(displayStories) {
+function initStories(displayStories, username) {
+
+    console.log("init stories start");
+
     // First load the data.
-    loadData(displayStories);
+    loadData(displayStories, username);
+
 
     // This is uncommented until the database is fully implemented.
     // loadData();
@@ -38,20 +42,25 @@ function initStories(displayStories) {
 /**
  * given a list of users, retrieve all the data from the server (or failing that) from the database.
  */
-function loadData(displayStories){
+function loadData(displayStories, username){
+    console.log("refreshing cached users");
     refreshCachedUsers();
-    retrieveAllStoryData(displayStories);
+    console.log("retrieving story data");
+    retrieveAllStoryData(displayStories, username);
 }
 
 /**
  * Cycles through the list of users and requests a story (or stories) from the server for each
  * user.
  */
-function retrieveAllStoryData(displayStories){
+function retrieveAllStoryData(displayStories, username){
     loadLikes(
         loadStories(function(){
-            if(displayStories) {
+            console.log("init stories end");
+            if(displayStories && username == null) {
                 displayCachedStories();
+            } else if (displayStories && username){
+                displayStoriesForUser(username);
             }
         })
     );
@@ -74,11 +83,8 @@ function loadStories(callback){
 
             clearStoriesContainer();
 
-
-
             // Clear the story cache, then fill it with the newly returned data
             clearCachedStories(function(){
-                var dataValue = dataR;
                 cacheStories(dataR, callback);
             })
 
@@ -123,9 +129,10 @@ function loadLikes(callback){
 
             // Clear the cache, then fill it with the newly returned data
             clearCachedLikes(function(){
-                var dataValue = dataR;
-
-                cacheLikes(dataR, callback);
+                cacheLikes(dataR, function(){
+                    console.log("cached likes");
+                    callback();
+                });
             });
 
             //Hide the 'offline' alert, as server request was successful
@@ -200,6 +207,10 @@ function setSortingMethod(){
     localStorage.setItem('toggle', JSON.stringify(toggle));
     console.log(JSON.stringify(toggle))
     window.location.reload();
+}
+
+function manualSetSortingMethod(method){
+    localStorage.setItem('toggle', JSON.stringify(method));
 }
 
 function getSortingMethod() {

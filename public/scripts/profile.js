@@ -3,6 +3,5 @@
  */
 
 function onLoadProfile(profileName){
-    initStories(false);
-    displayStoriesForUser(profileName);
+    initStories(true, profileName);
 }
