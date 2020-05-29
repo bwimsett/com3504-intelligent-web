@@ -1,11 +1,8 @@
-////////////////// DATABASE //////////////////
-// the database receives the following structure from the server
 /**
-class Story{
-    constructor(text){
-        this.text = text;
-    }
-}*/
+ * Handles indexed db transactions.
+ */
+
+
 var dbPromise;
 
 
@@ -27,6 +24,7 @@ function initDatabase(){
         if (!upgradeDb.objectStoreNames.contains(USER_STORE_NAME)){
             var userDB = upgradeDb.createObjectStore(USER_STORE_NAME, {keyPath: '_id'});
             userDB.createIndex('_id', "_id");
+            userDB.createIndex('username', "username");
             console.log("Initialised User DB");
         }
         if (!upgradeDb.objectStoreNames.contains(LIKES_STORE_NAME)){
@@ -94,7 +92,7 @@ function cacheLike(likeObject, update) {
  * Caches multiple likes at once, faster performance than cacheLike
  * @param likes
  */
-function cacheLikes(likes){
+function cacheLikes(likes, callback){
     if (dbPromise) {
         // Try pushing to indexed db
         dbPromise.then(async db => {
@@ -108,6 +106,7 @@ function cacheLikes(likes){
             // Then output success
         }).catch(function () {
             localStorage.setItem(likeObject, JSON.stringify(likeObject));
+            callback();
             //console.log("added like to local storage")
         });
     } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
@@ -128,12 +127,8 @@ function cacheStories(stories, callback){
             if(callback) {
                 return callback();
             }
-        }).catch(function () {
-            localStorage.setItem(storyObject, JSON.stringify(storyObject));
-            //console.log("added to local storage")
-        });
-    } // Otherwise us localstorage
-    else localStorage.setItem(storyObject, JSON.stringify(storyObject));
+        })
+    }
 }
 
 function cacheLikeWithoutUpdate(likeObject){
@@ -213,26 +208,31 @@ function getUserById(id, callback){
             }).then(function (result) {
 
                 if(result){
-                    console.log("user with ID "+id+" found.");
                     return callback(result);
                 }
 
-                console.log("No user with id: " + id + " found");
                 return callback(null);
             });
         }
 }
 
 function getUserByUsername(username, callback){
-    getAllUsers(function(usersList){
-        for(var elem of usersList){
-            if(elem.username == username){
-                return callback(elem);
-            }
-        }
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            var tx = db.transaction(USER_STORE_NAME, 'readonly');
+            var store = tx.objectStore(USER_STORE_NAME);
+            var index = store.index('username');
+            var result = index.get(username);
+            return result;
+        }).then(function (result) {
 
-        return null;
-    });
+            if(result){
+                return callback(result);
+            }
+
+            return callback(null);
+        });
+    }
 }
 
 /**
@@ -267,6 +267,26 @@ function getCachedStories(callback){
 
             // Only get stories with user_id of 0
             return index.getAll(/*IDBKeyRange.only(0)*/);
+        }).then(function (resultList) {
+            return callback(resultList);
+        });
+    }
+}
+
+function getCachedStoriesByUser(userID, callback){
+// If the indexed DB is set up
+    if (dbPromise) {
+        dbPromise.then(function (db) {
+            console.log('fetching stories');
+            // Get the story store
+            var tx = db.transaction(STORY_STORE_NAME, 'readonly');
+            var store = tx.objectStore(STORY_STORE_NAME);
+
+            // Get stories by user id
+            var index = store.index('user_id');
+
+            // Only get stories with user_id of 0
+            return index.getAll(userID);
         }).then(function (resultList) {
             return callback(resultList);
         });
