@@ -458,17 +458,15 @@ function getLikeById(likeId){
  * @param callback - a function to be called upon completion.
  */
 function getAverage(likes){
-        //console.log("Calculating average rating for story: "+storyId);
-        var total = 0;
+    //console.log("Calculating average rating for story: "+storyId);
+    var total = 0;
 
-        for(var elem of likes){
-            total += elem.rating;
-        }
+    for(var elem of likes){
+        total += elem.rating;
+    }
 
-        var avg = ""+total/likes.length;
-        avg = avg.substr(0, 3);
+    var avg = ""+total/likes.length;
+    avg = avg.substr(0, 3);
 
-        return avg;
+    return avg;
 }
-
-
