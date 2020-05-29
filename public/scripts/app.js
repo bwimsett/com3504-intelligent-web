@@ -7,17 +7,18 @@
  * called by the HTML onload
  * showing any cached stories and declaring the service worker
  */
+let initialised = false;
 
+/**
+ * Initialises the story data and database if necessary.
+ * @param displayStories - boolean value whether to display stories upon completion.
+ * @param username - string value, the username of the user to display stories for.
+ */
 function initStories(displayStories, username) {
 
     console.log("init stories start");
-
-    // First load the data.
     loadData(displayStories, username);
 
-
-    // This is uncommented until the database is fully implemented.
-    // loadData();
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker
             .register('./service-worker.js')
@@ -28,7 +29,7 @@ function initStories(displayStories, username) {
                 console.log('Service Worker NOT Registered '+ error.message);
             });
     }
-    //check for support
+    // initialise indexed DB
     if ('indexedDB' in window) {
         initDatabase();
     }
@@ -36,6 +37,7 @@ function initStories(displayStories, username) {
         console.log('This browser doesn\'t support IndexedDB');
     }
 
+    // Initialise the link to the current logged in profile
     initNavbarProfileLink();
 }
 
@@ -54,17 +56,21 @@ function loadData(displayStories, username){
  * user.
  */
 function retrieveAllStoryData(displayStories, username){
-    loadLikes(
-        loadStories(function(){
-            console.log("init stories end");
-            if(displayStories && username == null) {
-                displayCachedStories();
-            } else if (displayStories && username){
-                displayStoriesForUser(username);
-            }
-        })
-    );
+    console.log("loading likes");
 
+    loadLikes(function() {
+            console.log("loading likes complete");
+            console.log("loading stories");
+
+            loadStories(function () {
+                console.log("init stories end");
+                if (displayStories && username == null) {
+                    displayCachedStories();
+                } else if (displayStories && username) {
+                    displayStoriesForUser(username);
+                }
+            })
+        });
 }
 
 /**
@@ -109,6 +115,9 @@ function loadStories(callback){
 
 }
 
+/**
+ * Sets the link to the profile in the navbar to the currently logged in account.
+ */
 function initNavbarProfileLink(){
     $(".profileLink").prop("href", "profile/"+JSON.parse(getCurrentUser()).username);
 }
@@ -156,6 +165,9 @@ function loadLikes(callback){
 
 }
 
+/**
+ * Loads the data from the JSON file supplied at /usersStoriesAndRatings.json into the database.
+ */
 function addJsonData(){
 
     getJsonData("/usersStoriesAndRatings.json", function(text){
@@ -179,6 +191,11 @@ function addJsonData(){
 
 }
 
+/**
+ * Gets the data from a file at the given path.
+ * @param path
+ * @param callback
+ */
 function getJsonData(path, callback) {
     console.log("seeting f to file")
     var f = new XMLHttpRequest();
@@ -197,11 +214,18 @@ function getJsonData(path, callback) {
     f.send(null);
 }
 
+/**
+ * Adds a user based on ID from the json file.
+ * @param userId - the id to create a user from.
+ */
 function addUserJson(userId){
     var user = new User(userId, 123)
     addUserId(user);
 }
 
+/**
+ * Sets the sorting method based on the drop down list on the page.
+ */
 function setSortingMethod(){
     var toggle = $('#toggle').val();
     localStorage.setItem('toggle', JSON.stringify(toggle));
@@ -209,16 +233,26 @@ function setSortingMethod(){
     window.location.reload();
 }
 
+/**
+ * Manually sets the sorting method via a string.
+ * @param method - string value representing the sorting method. Either "date" or "recommended"
+ */
 function manualSetSortingMethod(method){
     localStorage.setItem('toggle', JSON.stringify(method));
 }
 
+/**
+ * Gets the sorting method from the dropdown on the page.
+ */
 function getSortingMethod() {
     var toggle = JSON.parse(localStorage.getItem('toggle'));
     console.log(toggle)
     $('#toggle').val(toggle);
 }
 
+/**
+ * Makes an AJAX request for all users of the system, caching the result in indexed db.
+ */
 function refreshCachedUsers(){
     $.ajax({
         url: '/users_list',
@@ -250,11 +284,8 @@ function refreshCachedUsers(){
 }
 
 
-
-///////////////////////// INTERFACE MANAGEMENT ///////////////////////////
-
 /**
- * @param text
+ * Data classes for the data to be sent to the server.
  */
 class Story{
     constructor(text, user_id){

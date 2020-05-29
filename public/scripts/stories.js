@@ -279,9 +279,6 @@ function displayStories(stories){
                 createStoryCard(elem);
         }
     }
-
-
-
 }
 
 /**
