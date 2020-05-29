@@ -151,15 +151,19 @@ function sortStoriesRec(stories, callback){
         getLikes( function (likes) {
             var unsorted = [];
             var sorted = [];
+            var userA =  JSON.parse(getCurrentUser());
+            var av = getAV(userA._id, likes);
+            var rA = av.average; //average current user
+            var userLikes = av.userLikes;
 
             if (stories == null){
                 return stories;
             }else{
                 for(var story of stories){
-                    var score = getStoryScore(story._id, users, likes);
+                    var score = getStoryScore(story._id, users, likes, userLikes, rA);
                     var storyScore = new StoryScore(story, score);
                     unsorted.push(storyScore);
-                    //console.log("Score for story:" + story._id + " is = " + score);
+                    console.log("==== Score for story:" + story._id + " is = " + score);
 
                 }
             }
@@ -222,6 +226,7 @@ function displayStories(stories){
             if (sorted && sorted.length>0) {
                 for (var elem of sorted)
                     createStoryCard(elem);
+                    console.log("rec create");
             }
 
         });
