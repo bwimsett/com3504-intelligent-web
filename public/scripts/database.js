@@ -89,6 +89,26 @@ function cacheLike(likeObject, update) {
 }
 
 /**
+ * Clears the local cache
+ */
+function clearCache(){
+    if (dbPromise) {
+        dbPromise.then(async db => {
+            var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
+            var store = tx.objectStore(LIKES_STORE_NAME);
+            await store.clear();
+            tx = db.transaction(USER_STORE_NAME, 'readwrite');
+            store = tx.objectStore(USER_STORE_NAME);
+            await store.clear();
+            tx = db.transaction(STORY_STORE_NAME, 'readwrite');
+            store = tx.objectStore(STORY_STORE_NAME);
+            await store.clear();
+            return tx.complete;
+        });
+    }
+}
+
+/**
  * Caches multiple likes at once, faster performance than cacheLike
  * @param likes
  */
@@ -98,12 +118,14 @@ function cacheLikes(likes, callback){
         dbPromise.then(async db => {
             var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
             var store = tx.objectStore(LIKES_STORE_NAME);
-            for(var elem of likes) {
-                //console.log("caching like");
+            for (var elem of likes) {
                 await store.put(elem);
             }
             return tx.complete;
             // Then output success
+
+        }).then(function(){
+            callback();
         }).catch(function () {
             localStorage.setItem(likeObject, JSON.stringify(likeObject));
             callback();
@@ -266,7 +288,7 @@ function getCachedStories(callback){
             var index = store.index('user_id');
 
             // Only get stories with user_id of 0
-            return index.getAll(/*IDBKeyRange.only(0)*/);
+            return index.getAll();
         }).then(function (resultList) {
             return callback(resultList);
         });

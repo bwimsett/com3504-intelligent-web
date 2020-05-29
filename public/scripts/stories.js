@@ -96,7 +96,6 @@ function createLikeSummaryIcons(storyData, likes){
  */
 function createLikeSummaryIcon(container, like, userID){
     getUserFromRamCache(userID, function(user){
-        console.log("getting user ID");
         container.append("<a href=\"/profile/"+user.username+"\"><button class=\"likesummary btn btn-secondary\" data-placement=\"bottom\" data-toggle=\"tooltip\" title=\""+user.username+"\"><p>"+like.rating+"</p></button></a>");
         $('[data-toggle="tooltip"]').tooltip();
     })
@@ -254,11 +253,14 @@ function sortStoriesRec(stories, callback){
  * @param stories - a list of stories to be displayed.
  */
 function displayStories(stories){
+    console.log("clearing story container");
     clearStoriesContainer();
     var toggle = JSON.parse(localStorage.getItem('toggle'));
     // Sort the results
+    console.log("sorting stories");
     if (toggle == "recommended"){
         sortStoriesRec(stories, function (sorted) {
+            console.log("finished sorting");
             // Output every matching result to the page
             if (sorted && sorted.length>0) {
                 for (var elem of sorted)
@@ -270,6 +272,7 @@ function displayStories(stories){
 
     }else{
         var sorted = sortStories(stories);
+        console.log("finished sorting");
         // Output every matching result to the page
         if (sorted && sorted.length>0) {
             for (var elem of sorted)
@@ -325,14 +328,7 @@ function getDateStringFromStoryData(storyData){
 function displayStoriesForUser(username){
     getUserByUsername(username, function(user){
         getCachedStoriesByUser(user._id,function(allStories){
-
-            var validStories  = [];
-
-            for(var elem of allStories){
-                validStories.push(elem);
-            }
-
-            displayStories(validStories);
+            displayStories(allStories);
         });
     });
 }
@@ -342,6 +338,7 @@ function displayStoriesForUser(username){
  */
 function displayCachedStories() {
     getCachedStories(function(results){
+        console.log("retrieved cached stories");
         displayStories(results);
     });
 }
