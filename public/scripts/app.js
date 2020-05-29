@@ -2,7 +2,6 @@
  * Handles AJAX requests and initialisation/basic features of the application.
  */
 
-
 /**
  * called by the HTML onload
  * showing any cached stories and declaring the service worker
@@ -48,6 +47,7 @@ function loadData(displayStories){
  * user.
  */
 function retrieveAllStoryData(displayStories){
+
     loadLikes(
         loadStories(function(){
             if(displayStories) {
@@ -95,7 +95,7 @@ function loadStories(callback){
             // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
-                    dvv.style.display='block';
+                dvv.style.display='block';
         }
     });
 
@@ -130,7 +130,7 @@ function loadLikes(callback){
 
             //Hide the 'offline' alert, as server request was successful
             if (document.getElementById('offline_div')!=null)
-                    document.getElementById('offline_div').style.display='none';
+                document.getElementById('offline_div').style.display='none';
         },
 
         // If the server request fails, show the cached data instead.
@@ -426,7 +426,7 @@ function loginUser(user){
         type: 'POST',
         success: function (response) {
             if (response == null){
-               alert("incorrect details");
+                alert("incorrect details");
             }else{
                 window.location.reload();
                 localStorage.setItem('currentUser', JSON.stringify(response));
