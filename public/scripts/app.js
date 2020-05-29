@@ -293,11 +293,17 @@ class User{
     }
 }
 
+/**
+ * chekcs if logged in
+ */
 function loggedIn(){
     var currentUser=localStorage.getItem('currentUser');
     return !(currentUser==null);
 }
 
+/**
+ * redirects if logged in
+ */
 function reIfLogged(){
     var pathname = window.location.pathname;
     if (pathname == "/register" || pathname == "/login" || pathname == "/"){
@@ -314,16 +320,26 @@ function reIfLogged(){
 
 }
 
+/**
+ * logouts
+ */
 function logout(){
     localStorage.removeItem("currentUser");
     window.location.replace("/");
 }
 
+/**
+ * gets the current user
+ */
 function getCurrentUser(){
     var currentUser = localStorage.getItem('currentUser');
     return currentUser;
 }
 
+
+/**
+ * logs user in
+ */
 function login() {
     var un = $('#username').val();
     var pw = $('#password').val();
@@ -337,6 +353,9 @@ function login() {
     }
 }
 
+/**
+ * registers user
+ */
 function register(){
     var un = $('#username').val();
     var pw = $('#password').val();
@@ -344,6 +363,10 @@ function register(){
     addUser(user);
 }
 
+/**
+ * adds user to database ajax
+ * @param users
+ */
 function addUser(user){
     var data = JSON.stringify(user);
     $.ajax({
@@ -364,6 +387,10 @@ function addUser(user){
     });
 }
 
+/**
+ * adds user if with id
+ * @param user
+ */
 function addUserId(user){
     var data = JSON.stringify(user);
     console.log(data);
@@ -385,6 +412,10 @@ function addUserId(user){
     });
 }
 
+/**
+ * login in user
+ * @param user
+ */
 function loginUser(user){
     var data = JSON.stringify(user);
     //console.log("running data" + data);

@@ -143,23 +143,6 @@ function getLikes(callback){
 }
 
 
-function getStoryLikes(id, likes){
-    var output = [];
-
-    for (var like of likes) {
-        var requestId = id;
-        var thisId = like._id;
-
-        if (like.story_id == id) {
-            output.push(like);
-
-        }
-    }
-    return output;
-
-
-}
-
 class Av{
     constructor(average, userLikes){
         this.average = average;
@@ -168,11 +151,10 @@ class Av{
 }
 
 /**
- * Ra = average score given by user
+ * Returns average score given by user and all users likes
  * @param userId
+ * @param likes
  */
-
-
 function getAV(userId, likes){
     //var userLikes = getUserLikes(userId, likes);
     var average = 0;
@@ -194,71 +176,6 @@ function getAV(userId, likes){
 
 }
 
-/**
- * Ru = rating for story
- * @param userId
- */
-function getRu(storyId, userId, likes){
-    var rating = null;
-    var like = getLike(storyId,  userId, likes);
-    if (like != null){
-        return like.rating;
-    }else{
-        return null;
-    }
-}
-
-/*function getSimilarity(user, likes){
-    var userA = JSON.parse(getCurrentUser());
-    var userLikes = getUserLikes(userA._id, likes);
-
-    var sum1 = 0;
-    var sum2 = 0;
-    var sum1sq = 0;
-    var sum2sq = 0;
-    var psum = 0;
-    var n = 0;
-
-    var score = 0;
-
-    for (var likeA of userLikes) {
-        var likeU = getLike(likeA.story_id, user._id, likes);
-        if(likeU != null){
-
-            //user ratings
-            var u1 = parseInt(likeA.rating);
-            var u2 = parseInt(likeU.rating);
-
-            //sim_pearson
-            sum1 += u1;
-            sum2 += u2;
-            sum1sq += Math.pow(u1, 2);
-            sum2sq += Math.pow(u2, 2);
-            psum += u1*u2
-            n += 1;
-
-        }
-
-    }
-
-
-
-    //sim_pearson
-    if (n != 0){
-        var num = psum-(sum1*sum2/n);
-        var den=Math.sqrt((sum1sq-Math.pow(sum1,2)/n)*(sum2sq-Math.pow(sum2,2)/n));
-        console.log("num:" + num + " | den: " + den);
-
-        if (den == 0){
-            score = 0;
-        }else{
-            score = (num/den);
-        }
-    }
-
-    return score;
-}*/
-
 class normSim{
     constructor(norm, similarity){
         this.norm = norm;
@@ -269,10 +186,11 @@ class normSim{
 /**
  * Returns score for the story.
  * @param storyId - the id of the story.
- * @param users - list of users.
- * @param likes - list of likes
+ * @param likes - list of users.
+ * @param currentUserLikes - current user likes
+ * @param currentUserAverage - current user average
  */
-function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAverage){
+function getStoryScore(storyId, likes, currentUserLikes, currentUserAverage){
 
     var score = 0; //score for story
 
@@ -286,15 +204,14 @@ function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAvera
     var topSum = 0; // sum(norm(user_rating - average_user_rating) * similarity))
 
     //loop through all users
-    for (var user of users) {
+    for (const [userId, userULikes] of Object.entries(likes)) {
         //check that user is not the (current user logged in)
-        if (user._id != userA._id){
+        if (userId != userA._id){
             //var rU = getRu(storyId, user._id, likes);
-            //console.log("RU: " + rU);
-
 
             // get norm and similarity
-            var normSim = getNormAndSim(storyId, user, likes, userALikes);
+            //var normSim = getNormAndSim(storyId, user, likes, userALikes);
+            var normSim = getNormAndSim(storyId, userULikes, userALikes);
             //check if null
             if (normSim != null){
                 //var norm = normaliseScore(rU, getAV(user._id, likes))
@@ -334,16 +251,16 @@ function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAvera
 
 
 /**
- * Returns score for the story.
+ * Returns normilisation for user U, and the similarity between user U and User A.
  * @param storyId - the id of the story.
- * @param user - user.
- * @param likes - list of likes
+ * @param userULikes - likes of user U
+ * @param userALikes - likes of current User
  */
-function getNormAndSim(storyId, user, likes, userLikes){
-
+//function getNormAndSim(storyId, user, likes, userLikes){
+function getNormAndSim(storyId, userULikes, userALikes){
     var userA = JSON.parse(getCurrentUser()); //current user
     //var userALikes = getUserLikes(userA._id, likes); // current user likes
-    var userALikes = userLikes;
+    //var userALikes = userLikes;
     var rU = null; // user rating for storyId
     var averageU = 0; // average user rating
     var norm = 0; // rU - averageU
@@ -359,36 +276,31 @@ function getNormAndSim(storyId, user, likes, userLikes){
 
     var score = 0; // similarity between current user and user
 
-    for (var like of likes){
-
-        if (like.user_id == user._id){
-            //
-
-            if (like.story_id == storyId){
-                // find rU - use rating for storyId
-                rU = like.rating;
-            }
-            // sum user ratings
-            averageU += like.rating;
-            un += 1;
-
-            // check if user and current user liked the same story - storyId
-            var likeA = getLike(like.story_id, userA._id, userALikes);
-            if (likeA != null){
-                //user ratings
-                var u1 = parseInt(likeA.rating);
-                var u2 = parseInt(like.rating);
-
-                //sim_pearson - equation for lecture
-                sum1 += u1;
-                sum2 += u2;
-                sum1sq += Math.pow(u1, 2);
-                sum2sq += Math.pow(u2, 2);
-                psum += u1*u2
-                n += 1;
-            }
+    for (var like of userULikes){
 
 
+        if (like.story_id == storyId){
+            // find rU - use rating for storyId
+            rU = like.rating;
+        }
+        // sum user ratings
+        averageU += like.rating;
+        un += 1;
+
+        // check if user and current user liked the same story - storyId
+        var likeA = getLike(like.story_id, userA._id, userALikes);
+        if (likeA != null){
+            //user ratings
+            var u1 = parseInt(likeA.rating);
+            var u2 = parseInt(like.rating);
+
+            //sim_pearson - equation for lecture
+            sum1 += u1;
+            sum2 += u2;
+            sum1sq += Math.pow(u1, 2);
+            sum2sq += Math.pow(u2, 2);
+            psum += u1*u2
+            n += 1;
         }
 
     }
@@ -420,15 +332,6 @@ function getNormAndSim(storyId, user, likes, userLikes){
 
 
 /**
- * (Ru - Ra) = normalised score for a story/user
- * @param userId
- */
-function normaliseScore(rU, AvRu){
-    return rU - AvRu;
-}
-
-
-/**
  * Get all of a given user's likes.
  * @param userId - the id of the user.
  * @param callback - a function to be called upon completion.
@@ -455,6 +358,13 @@ function getLikesByUserId(userId, callback){
     }
 }
 
+/**
+ * If a user has already liked a given post, return the like.
+ * @param storyId - the ID of the story.
+ * @param userId - the ID of the user.
+ * @param likes - list of likes.
+ */
+
 function getUserLikes(userId, likes){
     var output = [];
 
@@ -472,6 +382,7 @@ function getUserLikes(userId, likes){
  * If a user has already liked a given post, return the like.
  * @param storyId - the ID of the story.
  * @param userId - the ID of the user.
+ * @param likes - list of likes.
  */
 
 function getLike(storyId, userId, likes){
@@ -560,13 +471,4 @@ function getAverage(likes){
         return avg;
 }
 
-function getStoryAverage(storyId, likes){
-    var results = getStoryLikes(storyId, likes);
-    var total = 0;
-
-    for(var elem of results){
-        total += elem.rating;
-    }
-    return total/results.length;
-}
 

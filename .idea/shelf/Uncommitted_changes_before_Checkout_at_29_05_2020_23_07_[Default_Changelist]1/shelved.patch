@@ -1,0 +1,235 @@
+Index: public/scripts/stories.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/**\r\n * Handles stories.\r\n */\r\n\r\nlet usersCache = [];\r\n\r\n/**\r\n * Creates a card on the page with the input data\r\n * @param storyData - data about the story\r\n * @param userData  - data about the user that created the story\r\n */\r\nfunction createStoryCard(storyData) {\r\n    //console.log(\"updating results\");\r\n\r\n    // Get the container for stories\r\n    var storyContainer = $('#storyContainer')[0];\r\n\r\n    if (storyContainer == null) {\r\n        return;\r\n    }\r\n    // Await callback to get the user associated with this post\r\n\r\n    //console.log(\"Getting user id\");\r\n\r\n    getUserFromRamCache(storyData.user_id, function(user){\r\n        // Create a story card, and add it to the container\r\n        const storyCard = document.createElement(\"div\");\r\n        storyCard.id = \"story\"+storyData._id;\r\n        storyContainer.appendChild(storyCard);\r\n        //console.log(\"Getting average for story\");\r\n\r\n        getLikesByStoryId(storyData._id, function(likes){\r\n\r\n            const averageRating = getAverage(likes);\r\n\r\n            // Set HTML\r\n            storyCard.innerHTML =\r\n                \"<div class=\\\"card storyCard\\\">\" +\r\n                \"<div class=\\\"card-body\\\">\" +\r\n                \"<a href=\\\"/profile/\"+user.username+\"\\\"><h5 class=\\\"card-title\\\">\" + user.username+\"</h5></a>\" +\r\n                \"<p class =\\\"mb-2 text-muted\\\">\"+getDateStringFromStoryData(storyData)+\" | \"+\"Average rating: \"+averageRating+\"</p>\" +\r\n                \"<p class = \\\"card-text\\\">\" + storyData.text + \"</p>\" +\r\n                // LIKE BUTTONS\r\n                \"<div class=\\\"btn-group btn-group-toggle\\\" data-toggle=\\\"buttons\\\">\"+\r\n                \"<label class=\\\"btn btn-secondary likeoption option1\\\" onclick=\\\"submitLike(1, \\'\"+storyData._id+\"\\')\\\">\"+\r\n                \"<input type=\\\"radio\\\" name=\\\"options\\\" autocomplete=\\\"off\\\" checked>1</label>\"+\r\n                \"<label class=\\\"btn btn-secondary likeoption option2\\\" onclick=\\\"submitLike(2, \\'\"+storyData._id+\"\\')\\\">\"+\r\n                \"<input type=\\\"radio\\\" name=\\\"options\\\" autocomplete=\\\"off\\\">2\"+\r\n                \"</label>\"+\r\n                \"<label class=\\\"btn btn-secondary likeoption option3\\\" onclick=\\\"submitLike(3, \\'\"+storyData._id+\"\\')\\\">\"+\r\n                \"<input type=\\\"radio\\\" name=\\\"options\\\" autocomplete=\\\"off\\\">3\"+\r\n                \"</label>\"+\r\n                \"<label class=\\\"btn btn-secondary likeoption option4\\\" onclick=\\\"submitLike(4, \\'\"+storyData._id+\"\\')\\\">\"+\r\n                \"<input type=\\\"radio\\\" name=\\\"options\\\" autocomplete=\\\"off\\\">4\"+\r\n                \"</label>\"+\r\n                \"</div>\"+\r\n                \"<div class=\\\"likesummary-container likesummary\"+storyData._id+\"\\\"></div>\"+\r\n                // LIKES LIST\r\n                \"</div>\";\r\n\r\n            var currentUser = JSON.parse(getCurrentUser());\r\n\r\n            createLikeSummaryIcons(storyData, likes);\r\n\r\n            //console.log(\"Getting likes by story and user\");\r\n\r\n            for(var like of likes) {\r\n                if (like.user_id == currentUser._id) {\r\n                    highlightLikeButton(storyData._id, like.rating);\r\n                }\r\n            }\r\n        });\r\n    });\r\n}\r\n\r\n/**\r\n * Generates HTML for the like summary icons displayed beneath the like selection buttons\r\n * @param storyData - The story for which icons will be generated.\r\n */\r\nfunction createLikeSummaryIcons(storyData, likes){\r\n\r\n        var summaryContainer = $(\".likesummary\"+storyData._id);\r\n\r\n        // Create a button for each like\r\n        for(var elem of likes){\r\n            // Create blank tooltip\r\n            createLikeSummaryIcon(summaryContainer, elem, elem.user_id);\r\n        }\r\n}\r\n\r\n/**\r\n * Creates a single like summary icon based on a like and userID of the liker.\r\n * @param container - The JQuery DOM element containing the summary icon.\r\n * @param like - The like JSON data\r\n * @param userID - the ID string of the user which created the like.\r\n */\r\nfunction createLikeSummaryIcon(container, like, userID){\r\n    getUserFromRamCache(userID, function(user){\r\n        console.log(\"getting user ID\");\r\n        container.append(\"<a href=\\\"/profile/\"+user.username+\"\\\"><button class=\\\"likesummary btn btn-secondary\\\" data-placement=\\\"bottom\\\" data-toggle=\\\"tooltip\\\" title=\\\"\"+user.username+\"\\\"><p>\"+like.rating+\"</p></button></a>\");\r\n        $('[data-toggle=\"tooltip\"]').tooltip();\r\n    })\r\n\r\n}\r\n\r\n/**\r\n * Highlights the like selection button corresponding to the current user's like.\r\n * @param storyId - The story for which the button will be highlighted.\r\n * @param buttonValue - The value of the like.\r\n */\r\nfunction highlightLikeButton(storyId, buttonValue){\r\n    var card = $(\"#story\"+storyId);\r\n    var buttonClass = $(\".option\"+buttonValue);\r\n    var button = card.find(buttonClass).addClass('active');\r\n}\r\n\r\n/**\r\n * Takes a list of stories and sorts them by chronological order (insertion sort)\r\n * @param stories - A list of stories to be sorted.\r\n */\r\nfunction sortStories(stories){\r\n    if (stories == null){\r\n        return stories;\r\n    }\r\n\r\n    var unsorted = stories;\r\n\r\n    var sorted = [];\r\n\r\n    while(unsorted.length > 0){\r\n\r\n        //console.log(unsorted.length);\r\n        var current;\r\n        if(unsorted.length > 1) {\r\n            current = unsorted.shift();\r\n        } else {\r\n            current = unsorted.pop();\r\n        }\r\n\r\n        // If the sorted list is empty\r\n        if(sorted.length == 0){\r\n            sorted.push(current);\r\n            continue;\r\n        }\r\n\r\n        // Loop through sorted list\r\n        for(i = 0; i < sorted.length; i++){\r\n            // Insert if the date is greater than or equal to the current date\r\n            if(sorted[i].date_created <= current.date_created){\r\n                sorted.splice(i, 0, current);\r\n                break;\r\n            }\r\n\r\n            // if it has reached the end without insertion\r\n            if(i == sorted.length-1){\r\n                sorted.push(current);\r\n                break;\r\n            }\r\n        }\r\n    }\r\n\r\n    return sorted;\r\n}\r\n\r\n/**\r\n * Data class linking a story to a score.\r\n */\r\nclass StoryScore{\r\n    constructor(story, score){\r\n        this.story = story;\r\n        this.score = score;\r\n    }\r\n}\r\n\r\n/**\r\n * Sorts the stories in order of preference based on the recommender.\r\n * @param stories - a list of stories to sort.\r\n * @param callback - the function to be called upon completion.\r\n */\r\nfunction sortStoriesRec(stories, callback){\r\n\r\n    getAllUsers(function (users) {\r\n\r\n        getLikes( function (likes) {\r\n            var unsorted = [];\r\n            var sorted = [];\r\n            var userA =  JSON.parse(getCurrentUser());\r\n            var av = getAV(userA._id, likes);\r\n            var rA = av.average; //average current user\r\n            var userLikes = av.userLikes;\r\n\r\n            if (stories == null){\r\n                return stories;\r\n            }else{\r\n                for(var story of stories){\r\n                    var score = getStoryScore(story._id, users, likes, userLikes, rA);\r\n                    var storyScore = new StoryScore(story, score);\r\n                    unsorted.push(storyScore);\r\n                    console.log(\"==== Score for story:\" + story._id + \" is = \" + score);\r\n\r\n                }\r\n            }\r\n\r\n            while(unsorted.length > 0){\r\n\r\n                //console.log(unsorted.length);\r\n\r\n                var current;\r\n                if(unsorted.length > 1) {\r\n                    current = unsorted.shift();\r\n                } else {\r\n                    current = unsorted.pop();\r\n                }\r\n\r\n\r\n                // If the sorted list is empty\r\n                if(sorted.length == 0){\r\n                    sorted.push(current);\r\n                    continue;\r\n                }\r\n\r\n                // Loop through sorted list\r\n                for(i = 0; i < sorted.length; i++){\r\n                    // Insert if the date is greater than or equal to the current date\r\n                    if(sorted[i].score <= current.score){\r\n                        sorted.splice(i, 0, current);\r\n                        break;\r\n                    }\r\n\r\n                    // if it has reached the end without insertion\r\n                    if(i == sorted.length-1){\r\n                        sorted.push(current);\r\n                        break;\r\n                    }\r\n                }\r\n            }\r\n\r\n            var result = []\r\n\r\n            for(var story of sorted){\r\n                story = result.push(story.story);\r\n            }\r\n\r\n            return callback(result);\r\n\r\n\r\n        })\r\n    })\r\n\r\n}\r\n\r\n/**\r\n * Clears the story container and replaces it with the given list of stories.\r\n * @param stories - a list of stories to be displayed.\r\n */\r\nfunction displayStories(stories){\r\n    clearStoriesContainer();\r\n    var toggle = JSON.parse(localStorage.getItem('toggle'));\r\n    // Sort the results\r\n    if (toggle == \"recommended\"){\r\n        sortStoriesRec(stories, function (sorted) {\r\n            // Output every matching result to the page\r\n            if (sorted && sorted.length>0) {\r\n                for (var elem of sorted)\r\n                    createStoryCard(elem);\r\n                    console.log(\"rec create\");\r\n            }\r\n\r\n        });\r\n\r\n    }else{\r\n        var sorted = sortStories(stories);\r\n        // Output every matching result to the page\r\n        if (sorted && sorted.length>0) {\r\n            for (var elem of sorted)\r\n                createStoryCard(elem);\r\n        }\r\n    }\r\n\r\n\r\n\r\n}\r\n\r\n/**\r\n * Removes all contents from the stories container on the page.\r\n */\r\nfunction clearStoriesContainer(){\r\n   var container = $('#storyContainer')[0];\r\n   container.innerHTML = \"\";\r\n}\r\n\r\n/**\r\n * Returns a date in string format to be displayed on a story card.\r\n * @param storyData - the story from which the date will be extracted.\r\n * @returns {string}\r\n */\r\nfunction getDateStringFromStoryData(storyData){\r\n    if(storyData.date_created == null){\r\n        return;\r\n    }\r\n\r\n\r\n    var dateValue = new Date(storyData.date_created);\r\n\r\n    // Add a 0 to the beginning of hours and minutes if they are too short\r\n    var hours= \"\"+dateValue.getHours();\r\n    if(hours.length < 2){\r\n        hours = \"0\"+hours;\r\n    }\r\n\r\n    var minutes = \"\"+dateValue.getMinutes();\r\n    if(minutes.length < 2){\r\n        minutes = \"0\"+minutes;\r\n    }\r\n\r\n    var dateString = \"\"+hours+\":\"+minutes+\" \"+dateValue.getDate()+\"/\"+(dateValue.getMonth()+1)+\"/\"+dateValue.getFullYear();\r\n\r\n    return dateString;\r\n}\r\n\r\n/**\r\n * Displays all the stories for a given user on the page.\r\n * @param username - the username of the user to display stories for.\r\n */\r\nfunction displayStoriesForUser(username){\r\n    getUserByUsername(username, function(user){\r\n        getCachedStoriesByUser(user._id,function(allStories){\r\n\r\n            var validStories  = [];\r\n\r\n            for(var elem of allStories){\r\n                validStories.push(elem);\r\n            }\r\n\r\n            displayStories(validStories);\r\n        });\r\n    });\r\n}\r\n\r\n/**\r\n * Displays all the stories currently cached, regardless of user.\r\n */\r\nfunction displayCachedStories() {\r\n    getCachedStories(function(results){\r\n        displayStories(results);\r\n    });\r\n}\r\n\r\n/**\r\n * Finds a user in the 'usersCache' variable, or from indexed DB if it has not been cached. Faster for large data sets.\r\n * @param userID\r\n */\r\nfunction getUserFromRamCache(userID, callback){\r\n    for(var user of usersCache){\r\n        if(user._id == userID){\r\n            //console.log(\"Found user in ram cache\");\r\n            return callback(user);\r\n        }\r\n    }\r\n\r\n    getUserById(userID, function(result) {\r\n        if(result != null){\r\n            usersCache.push(result);\r\n        } else {\r\n            return;\r\n        }\r\n\r\n        return callback(result);\r\n    });\r\n}\r\n\r\n/**\r\n * Posts a story to /stories_list using ajax.\r\n */\r\nfunction sendStoryId(story){\r\n    const data = JSON.stringify(story);\r\n\r\n    $.ajax({\r\n        url: '/addStoryId',\r\n        data: data,\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (dataR) {\r\n            // Display the output on the screen\r\n            console.log(\"response received\");\r\n\r\n            cacheStories(dataR, function(){\r\n                displayCachedStories();\r\n            });\r\n        }\r\n    });\r\n\r\n    // Prevent the page from refreshing and clearing the posts just loaded\r\n    event.preventDefault();\r\n}\r\n\r\n\r\n/**\r\n * Posts a story to /stories_list using ajax.\r\n */\r\nfunction sendStory(story){\r\n    const data = JSON.stringify(story);\r\n\r\n    $.ajax({\r\n        url: '/stories_list',\r\n        data: data,\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (dataR) {\r\n            // Display the output on the screen\r\n            console.log(\"response received\");\r\n\r\n            // Cache the data for offline viewing\r\n            cacheStory(dataR, function () {\r\n                displayCachedStories();\r\n            });\r\n\r\n            // Hide the offline alert\r\n            if (document.getElementById('offline_div')!=null)\r\n                document.getElementById('offline_div').style.display='none';\r\n        },\r\n\r\n        // the request to the server has failed. Display the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            showOfflineWarning();\r\n            console.log(\"ajax post failed\",error);\r\n            //getCachedData(city, date);\r\n            const dvv= document.getElementById('offline_div');\r\n            if (dvv!=null)\r\n                dvv.style.display='block';\r\n        }\r\n    });\r\n\r\n    // Anything that happens after the ajax request goes here\r\n\r\n    // Prevent the page from refreshing and clearing the posts just loaded\r\n    event.preventDefault();\r\n}\r\n\r\n\r\n$().button('toggle')\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- public/scripts/stories.js	(revision 6c563d466f966904b8e2c5b39ba40ed135704964)
++++ public/scripts/stories.js	(date 1590788718235)
+@@ -179,72 +179,76 @@
+  */
+ function sortStoriesRec(stories, callback){
+ 
+-    getAllUsers(function (users) {
+-
+-        getLikes( function (likes) {
+-            var unsorted = [];
+-            var sorted = [];
+-            var userA =  JSON.parse(getCurrentUser());
+-            var av = getAV(userA._id, likes);
+-            var rA = av.average; //average current user
+-            var userLikes = av.userLikes;
++    getLikes( function (likes) {
++        var unsorted = [];
++        var sorted = [];
++        var userA =  JSON.parse(getCurrentUser());
++        var av = getAV(userA._id, likes);
++        var rA = av.average; //average current user
++        var userALikes = av.userLikes;
++        var glikes = likes.reduce((r, a) => {
++            r[a.user_id] = [...r[a.user_id] || [], a];
++            return r;
++        }, {});
++
++        //console.log(JSON.stringify(glikes[0]));
+ 
+-            if (stories == null){
+-                return stories;
+-            }else{
+-                for(var story of stories){
+-                    var score = getStoryScore(story._id, users, likes, userLikes, rA);
+-                    var storyScore = new StoryScore(story, score);
+-                    unsorted.push(storyScore);
+-                    console.log("==== Score for story:" + story._id + " is = " + score);
++        if (stories == null){
++            return stories;
++        }else{
++            for(var story of stories){
++                //var score = getStoryScore(story._id, users, likes, userLikes, rA);
++                var score = getStoryScore(story._id, glikes, userALikes, rA);
++                var storyScore = new StoryScore(story, score);
++                unsorted.push(storyScore);
++                console.log("==== Score for story:" + story._id + " is = " + score);
+ 
+-                }
+-            }
++            }
++        }
+ 
+-            while(unsorted.length > 0){
++        while(unsorted.length > 0){
+ 
+-                //console.log(unsorted.length);
++            //console.log(unsorted.length);
+ 
+-                var current;
+-                if(unsorted.length > 1) {
+-                    current = unsorted.shift();
+-                } else {
+-                    current = unsorted.pop();
+-                }
++            var current;
++            if(unsorted.length > 1) {
++                current = unsorted.shift();
++            } else {
++                current = unsorted.pop();
++            }
+ 
+ 
+-                // If the sorted list is empty
+-                if(sorted.length == 0){
+-                    sorted.push(current);
+-                    continue;
+-                }
++            // If the sorted list is empty
++            if(sorted.length == 0){
++                sorted.push(current);
++                continue;
++            }
+ 
+-                // Loop through sorted list
+-                for(i = 0; i < sorted.length; i++){
+-                    // Insert if the date is greater than or equal to the current date
+-                    if(sorted[i].score <= current.score){
+-                        sorted.splice(i, 0, current);
+-                        break;
+-                    }
++            // Loop through sorted list
++            for(i = 0; i < sorted.length; i++){
++                // Insert if the date is greater than or equal to the current date
++                if(sorted[i].score <= current.score){
++                    sorted.splice(i, 0, current);
++                    break;
++                }
+ 
+-                    // if it has reached the end without insertion
+-                    if(i == sorted.length-1){
+-                        sorted.push(current);
+-                        break;
+-                    }
+-                }
+-            }
++                // if it has reached the end without insertion
++                if(i == sorted.length-1){
++                    sorted.push(current);
++                    break;
++                }
++            }
++        }
+ 
+-            var result = []
++        var result = []
+ 
+-            for(var story of sorted){
+-                story = result.push(story.story);
+-            }
++        for(var story of sorted){
++            story = result.push(story.story);
++        }
+ 
+-            return callback(result);
++        return callback(result);
+ 
+ 
+-        })
+     })
+ 
+ }
+Index: public/scripts/app.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>/**\r\n * Handles AJAX requests and initialisation/basic features of the application.\r\n */\r\n\r\n\r\n/**\r\n * called by the HTML onload\r\n * showing any cached stories and declaring the service worker\r\n */\r\n\r\nfunction initStories(displayStories) {\r\n    // First load the data.\r\n    loadData(displayStories);\r\n\r\n    // This is uncommented until the database is fully implemented.\r\n    // loadData();\r\n    if ('serviceWorker' in navigator) {\r\n        navigator.serviceWorker\r\n            .register('./service-worker.js')\r\n            .then(function () {\r\n                console.log('Service Worker Registered');\r\n            })\r\n            .catch (function (error){\r\n                console.log('Service Worker NOT Registered '+ error.message);\r\n            });\r\n    }\r\n    //check for support\r\n    if ('indexedDB' in window) {\r\n        initDatabase();\r\n    }\r\n    else {\r\n        console.log('This browser doesn\\'t support IndexedDB');\r\n    }\r\n\r\n    initNavbarProfileLink();\r\n}\r\n\r\n/**\r\n * given a list of users, retrieve all the data from the server (or failing that) from the database.\r\n */\r\nfunction loadData(displayStories){\r\n    refreshCachedUsers();\r\n    retrieveAllStoryData(displayStories);\r\n}\r\n\r\n/**\r\n * Cycles through the list of users and requests a story (or stories) from the server for each\r\n * user.\r\n */\r\nfunction retrieveAllStoryData(displayStories){\r\n    loadLikes(\r\n        loadStories(function(){\r\n            if(displayStories) {\r\n                displayCachedStories();\r\n            }\r\n        })\r\n    );\r\n\r\n}\r\n\r\n/**\r\n * Returns all the stories and associated users\r\n * @param user\r\n */\r\nfunction loadStories(callback){\r\n    $.ajax({\r\n        url: '/stories',\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (dataR) {\r\n            if(dataR == null){\r\n                return;\r\n            }\r\n\r\n            clearStoriesContainer();\r\n\r\n\r\n\r\n            // Clear the story cache, then fill it with the newly returned data\r\n            clearCachedStories(function(){\r\n                var dataValue = dataR;\r\n                cacheStories(dataR, callback);\r\n            })\r\n\r\n            // Hide the 'offline' alert, as server request was successful\r\n            /*if (document.getElementById('offline_div')!=null)\r\n                    document.getElementById('offline_div').style.display='none';*/\r\n        },\r\n\r\n        // If the server request fails, show the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            showOfflineWarning();\r\n            displayCachedStories();\r\n\r\n            // Show the 'offline' alert\r\n            const dvv= document.getElementById('offline_div');\r\n            if (dvv!=null)\r\n                    dvv.style.display='block';\r\n        }\r\n    });\r\n\r\n    // Anything that happens after the ajax request goes here\r\n\r\n}\r\n\r\nfunction initNavbarProfileLink(){\r\n    $(\".profileLink\").prop(\"href\", \"profile/\"+JSON.parse(getCurrentUser()).username);\r\n}\r\n\r\n/**\r\n * Returns all the stories and associated users\r\n * @param user\r\n */\r\nfunction loadLikes(callback){\r\n    $.ajax({\r\n        url: '/retrieve_likes',\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (dataR) {\r\n            if(dataR == null){\r\n                return;\r\n            }\r\n\r\n            // Clear the cache, then fill it with the newly returned data\r\n            clearCachedLikes(function(){\r\n                var dataValue = dataR;\r\n\r\n                cacheLikes(dataR, callback);\r\n            });\r\n\r\n            //Hide the 'offline' alert, as server request was successful\r\n            if (document.getElementById('offline_div')!=null)\r\n                    document.getElementById('offline_div').style.display='none';\r\n        },\r\n\r\n        // If the server request fails, show the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            showOfflineWarning();\r\n            displayCachedStories();\r\n\r\n            // Show the 'offline' alert\r\n            const dvv= document.getElementById('offline_div');\r\n            if (dvv!=null)\r\n                dvv.style.display='block';\r\n        }\r\n    });\r\n\r\n    // Anything that happens after the ajax request goes here\r\n\r\n}\r\n\r\nfunction addJsonData(){\r\n\r\n    getJsonData(\"/usersStoriesAndRatings.json\", function(text){\r\n        var json = JSON.parse(text);\r\n        var users = json.users;\r\n\r\n        for (var user in users){\r\n            addUserJson(users[user].userId);\r\n            var ratings = users[user].ratings;\r\n            addLikes(ratings, users[user].userId);\r\n        }\r\n\r\n        var stories = json.stories;\r\n\r\n        for (var story in stories){\r\n            sendStoryId(new StoryId(stories[story].storyId, stories[story].text, stories[story].userId));\r\n\r\n        }\r\n        console.log(\"json file added\")\r\n    });\r\n\r\n}\r\n\r\nfunction getJsonData(path, callback) {\r\n    console.log(\"seeting f to file\")\r\n    var f = new XMLHttpRequest();\r\n\r\n    console.log(\"getting file\")\r\n    f.overrideMimeType(\"application/json\");\r\n    f.open(\"GET\", path, true);\r\n\r\n    console.log(\"getting state\")\r\n    f.onreadystatechange = function() {\r\n        if (f.readyState === 4 && f.status == \"200\") {\r\n            callback(f.responseText);\r\n        }\r\n    }\r\n\r\n    f.send(null);\r\n}\r\n\r\nfunction addUserJson(userId){\r\n    var user = new User(userId, 123)\r\n    addUserId(user);\r\n}\r\n\r\nfunction setSortingMethod(){\r\n    var toggle = $('#toggle').val();\r\n    localStorage.setItem('toggle', JSON.stringify(toggle));\r\n    console.log(JSON.stringify(toggle))\r\n    window.location.reload();\r\n}\r\n\r\nfunction getSortingMethod() {\r\n    var toggle = JSON.parse(localStorage.getItem('toggle'));\r\n    console.log(toggle)\r\n    $('#toggle').val(toggle);\r\n}\r\n\r\nfunction refreshCachedUsers(){\r\n    $.ajax({\r\n        url: '/users_list',\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (dataR) {\r\n\r\n            // Add the data to the cache (currently accepts a single story)\r\n            cacheUsers(dataR);\r\n\r\n            // Hide the 'offline' alert, as server request was successful\r\n            /*if (document.getElementById('offline_div')!=null)\r\n                document.getElementById('offline_div').style.display='none';*/\r\n        },\r\n\r\n        // If the server request fails, show the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            showOfflineWarning();\r\n            displayCachedStories();\r\n\r\n            // Show the 'offline' alert\r\n            const dvv= document.getElementById('offline_div');\r\n            if (dvv!=null)\r\n                dvv.style.display='block';\r\n        }\r\n    });\r\n\r\n    // Anything that happens after the ajax request goes here\r\n}\r\n\r\n\r\n\r\n///////////////////////// INTERFACE MANAGEMENT ///////////////////////////\r\n\r\n/**\r\n * @param text\r\n */\r\nclass Story{\r\n    constructor(text, user_id){\r\n        this.text = text;\r\n        this.user_id = user_id;\r\n    }\r\n}\r\n\r\nclass StoryId{\r\n    constructor(id, text, user_id){\r\n        this.id = id;\r\n        this.text = text;\r\n        this.user_id = user_id;\r\n    }\r\n}\r\n\r\n\r\n/**\r\n * Creates a new post from the form and stores it in local storage\r\n */\r\nfunction createPost(){\r\n    var postList = JSON.parse(localStorage.getItem('posts'));\r\n    if(postList == null){\r\n        postList = [];\r\n    }\r\n\r\n    var formContents = $('#newstory').val();\r\n    var currentUser = JSON.parse(getCurrentUser());\r\n    var newPost = new Story(formContents, currentUser._id);\r\n\r\n\r\n    console.log(\"creating post with text: \"+formContents);\r\n    postList.push(newPost)\r\n    localStorage.setItem('posts', JSON.stringify(postList));\r\n    // Create ajax request to send new story and refresh page\r\n    sendStory(newPost);\r\n    return false;\r\n}\r\n\r\n\r\n/////////////////////////////////// LOGINS //////////////////////////////////\r\n\r\nclass User{\r\n    constructor(username, password){\r\n        this.username = username;\r\n        this.password = password;\r\n    }\r\n}\r\n\r\nfunction loggedIn(){\r\n    var currentUser=localStorage.getItem('currentUser');\r\n    return !(currentUser==null);\r\n}\r\n\r\nfunction reIfLogged(){\r\n    var pathname = window.location.pathname;\r\n    if (pathname == \"/register\" || pathname == \"/login\" || pathname == \"/\"){\r\n        if(loggedIn()){\r\n            window.location.replace(\"./home\");\r\n        }\r\n    }else{\r\n        if(!loggedIn()){\r\n            window.location.replace(\"./\");\r\n        }\r\n\r\n    }\r\n\r\n\r\n}\r\n\r\nfunction logout(){\r\n    localStorage.removeItem(\"currentUser\");\r\n    window.location.replace(\"/\");\r\n}\r\n\r\nfunction getCurrentUser(){\r\n    var currentUser = localStorage.getItem('currentUser');\r\n    return currentUser;\r\n}\r\n\r\nfunction login() {\r\n    var un = $('#username').val();\r\n    var pw = $('#password').val();\r\n    var user = new User(un, pw);\r\n    if (!loggedIn()) {\r\n        loginUser(user);\r\n        console.log('attempting to login user: '+ user.username);\r\n    }else{\r\n        window.location.replace(\"./home\");\r\n        console.log(\"already logged in.... \");\r\n    }\r\n}\r\n\r\nfunction register(){\r\n    var un = $('#username').val();\r\n    var pw = $('#password').val();\r\n    var user = new User(un, pw);\r\n    addUser(user);\r\n}\r\n\r\nfunction addUser(user){\r\n    var data = JSON.stringify(user);\r\n    $.ajax({\r\n        url: '/register',\r\n        data: data,\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (response) {\r\n            console.log(\"register sucessful, ID: \"+user._id);\r\n            alert(\"register successful\");\r\n            window.location.reload();\r\n        },\r\n\r\n        // the request to the server has failed. Display the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            console.log(\"ajax post failed\",error);\r\n        }\r\n    });\r\n}\r\n\r\nfunction addUserId(user){\r\n    var data = JSON.stringify(user);\r\n    console.log(data);\r\n    $.ajax({\r\n        url: '/adduser',\r\n        data: data,\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (response) {\r\n            console.log(\"register sucessful, ID: \"+user._id);\r\n            //alert(\"register successful\");\r\n            //window.location.reload();\r\n        },\r\n\r\n        // the request to the server has failed. Display the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            console.log(\"ajax post failed\",error);\r\n        }\r\n    });\r\n}\r\n\r\nfunction loginUser(user){\r\n    var data = JSON.stringify(user);\r\n    //console.log(\"running data\" + data);\r\n    $.ajax({\r\n        url: '/login',\r\n        data: data,\r\n        contentType: 'application/json',\r\n        type: 'POST',\r\n        success: function (response) {\r\n            if (response == null){\r\n               alert(\"incorrect details\");\r\n            }else{\r\n                window.location.reload();\r\n                localStorage.setItem('currentUser', JSON.stringify(response));\r\n\r\n                console.log(\"USER LOGGING IN: \"+response._id);\r\n                window.location.replace(\"./home\");\r\n            }\r\n\r\n            //findUser(user);\r\n            // Display the output on the screen\r\n            console.log(\"response received logging in ----\");\r\n\r\n        },\r\n\r\n        // the request to the server has failed. Display the cached data instead.\r\n        error: function (xhr, status, error) {\r\n            console.log(\"server request failed\",error);\r\n            loginUserOffline(user);\r\n            window.location.reload();\r\n\r\n\r\n        }\r\n    });\r\n}\r\n\r\n\r\n/**\r\n * When the client goes offline, show an offline warning for the user\r\n */\r\nwindow.addEventListener('offline', function(e) {\r\n    // Queue up events for server.\r\n    console.log(\"You are offline\");\r\n    showOfflineWarning();\r\n}, false);\r\n\r\n/**\r\n * When the client gets online, hide the offline warning\r\n */\r\nwindow.addEventListener('online', function(e) {\r\n    // Resync data with server.\r\n    console.log(\"You are online\");\r\n    hideOfflineWarning();\r\n    loadData();\r\n}, false);\r\n\r\nfunction showOfflineWarning(){\r\n    if (document.getElementById('offline_div')!=null)\r\n        document.getElementById('offline_div').style.display='block';\r\n}\r\n\r\nfunction hideOfflineWarning(){\r\n    if (document.getElementById('offline_div')!=null)\r\n        document.getElementById('offline_div').style.display='none';\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- public/scripts/app.js	(revision 6c563d466f966904b8e2c5b39ba40ed135704964)
++++ public/scripts/app.js	(date 1590789891268)
+@@ -293,11 +293,17 @@
+     }
+ }
+ 
++/**
++ * chekcs if logged in
++ */
+ function loggedIn(){
+     var currentUser=localStorage.getItem('currentUser');
+     return !(currentUser==null);
+ }
+ 
++/**
++ * redirects if logged in
++ */
+ function reIfLogged(){
+     var pathname = window.location.pathname;
+     if (pathname == "/register" || pathname == "/login" || pathname == "/"){
+@@ -314,16 +320,26 @@
+ 
+ }
+ 
++/**
++ * logouts
++ */
+ function logout(){
+     localStorage.removeItem("currentUser");
+     window.location.replace("/");
+ }
+ 
++/**
++ * gets the current user
++ */
+ function getCurrentUser(){
+     var currentUser = localStorage.getItem('currentUser');
+     return currentUser;
+ }
+ 
++
++/**
++ * logs user in
++ */
+ function login() {
+     var un = $('#username').val();
+     var pw = $('#password').val();
+@@ -337,6 +353,9 @@
+     }
+ }
+ 
++/**
++ * registers user
++ */
+ function register(){
+     var un = $('#username').val();
+     var pw = $('#password').val();
+@@ -344,6 +363,10 @@
+     addUser(user);
+ }
+ 
++/**
++ * adds user to database ajax
++ * @param users
++ */
+ function addUser(user){
+     var data = JSON.stringify(user);
+     $.ajax({
+@@ -364,6 +387,10 @@
+     });
+ }
+ 
++/**
++ * adds user if with id
++ * @param user
++ */
+ function addUserId(user){
+     var data = JSON.stringify(user);
+     console.log(data);
+@@ -385,6 +412,10 @@
+     });
+ }
+ 
++/**
++ * login in user
++ * @param user
++ */
+ function loginUser(user){
+     var data = JSON.stringify(user);
+     //console.log("running data" + data);
