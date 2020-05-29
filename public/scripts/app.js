@@ -4,12 +4,6 @@
 
 
 /**
- * called by the HTML onload
- * showing any cached stories and declaring the service worker
- */
-let initialised = false;
-
-/**
  * Initialises the story data and database if necessary.
  * @param displayStories - boolean value whether to display stories upon completion.
  * @param username - string value, the username of the user to display stories for.
