@@ -5,7 +5,6 @@
 
 var dbPromise;
 
-
 const STORIES_DB_NAME= 'db_stories_1';
 const STORY_STORE_NAME= 'store_stories';
 const USER_STORE_NAME= 'store_users';
@@ -69,6 +68,11 @@ function cacheStory(storyObject, callback) {
     else localStorage.setItem(storyObject, JSON.stringify(storyObject));
 }
 
+/**
+ * Caches a single like, updating a previous value if stated.
+ * @param likeObject - the like to cache.
+ * @param update - bool value, whether to update previous values or not.
+ */
 function cacheLike(likeObject, update) {
     // console.log('inserting like: '+JSON.stringify(likeObject));
     // Check like doesn't already exist
@@ -98,12 +102,14 @@ function cacheLikes(likes, callback){
         dbPromise.then(async db => {
             var tx = db.transaction(LIKES_STORE_NAME, 'readwrite');
             var store = tx.objectStore(LIKES_STORE_NAME);
-            for(var elem of likes) {
-                //console.log("caching like");
+            for (var elem of likes) {
                 await store.put(elem);
             }
             return tx.complete;
             // Then output success
+
+        }).then(function(){
+            callback();
         }).catch(function () {
             localStorage.setItem(likeObject, JSON.stringify(likeObject));
             callback();
@@ -112,6 +118,11 @@ function cacheLikes(likes, callback){
     } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
 }
 
+/**
+ * Caches the stories given in indexed db.
+ * @param stories - a list of stories to be cached.
+ * @param callback - a function to be called upon completion.
+ */
 function cacheStories(stories, callback){
     if (dbPromise) {
         // Try pushing to indexed db
@@ -131,6 +142,10 @@ function cacheStories(stories, callback){
     }
 }
 
+/**
+ * Caches a like, skipping the check to update one that already exists. (Better for performance).
+ * @param likeObject
+ */
 function cacheLikeWithoutUpdate(likeObject){
     if (dbPromise) {
         // Try pushing to indexed db
@@ -147,12 +162,20 @@ function cacheLikeWithoutUpdate(likeObject){
     } else localStorage.setItem(likeObject, JSON.stringify(likeObject));
 }
 
+/**
+ * Adds a list of users to the cache.
+ * @param usersList - a list of users.
+ */
 function cacheUsers(usersList){
     for(var elem of usersList){
         cacheUserData(elem);
     }
 }
 
+/**
+ * Caches a user to indexedDB.
+ * @param user - the user to be cached.
+ */
 function cacheUserData(user){
     if (dbPromise) {
         dbPromise.then(async db  => {
@@ -169,6 +192,10 @@ function cacheUserData(user){
     }
 }
 
+/**
+ * Facilitates offline logins using indexed db.
+ * @param userObj - the user to log in.
+ */
 function loginUserOffline(userObj){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -216,6 +243,11 @@ function getUserById(id, callback){
         }
 }
 
+/**
+ * Gets a user with a given username, if it exists.
+ * @param username - the username to search for.
+ * @param callback - a function to call upon completion.
+ */
 function getUserByUsername(username, callback){
     if (dbPromise) {
         dbPromise.then(function (db) {
@@ -236,7 +268,8 @@ function getUserByUsername(username, callback){
 }
 
 /**
- * Retrieves users
+ * Retrieves all the users
+ * @param callback - a function to call upon completion.
  */
 function getAllUsers(callback){
     if (dbPromise) {
@@ -252,7 +285,10 @@ function getAllUsers(callback){
     }
 }
 
-
+/**
+ * Returns all the stories in cache.
+ * @param callback - a function to call upon completion.
+ */
 function getCachedStories(callback){
     // If the indexed DB is set up
     if (dbPromise) {
@@ -266,13 +302,18 @@ function getCachedStories(callback){
             var index = store.index('user_id');
 
             // Only get stories with user_id of 0
-            return index.getAll(/*IDBKeyRange.only(0)*/);
+            return index.getAll();
         }).then(function (resultList) {
             return callback(resultList);
         });
     }
 }
 
+/**
+ * Gets all the cached stories for a particular user.
+ * @param userID - the id of the user.
+ * @param callback - a function to call upon completion.
+ */
 function getCachedStoriesByUser(userID, callback){
 // If the indexed DB is set up
     if (dbPromise) {
@@ -293,6 +334,10 @@ function getCachedStoriesByUser(userID, callback){
     }
 }
 
+/**
+ * Clears the story cache.
+ * @param callback - a function to call upon completion.
+ */
 function clearCachedStories(callback){
     // If the indexed DB is set up
     if (dbPromise) {
@@ -309,6 +354,10 @@ function clearCachedStories(callback){
     }
 }
 
+/**
+ * Clears the likes cache.
+ * @param callback - a function to call upon completion.
+ */
 function clearCachedLikes(callback){
     // If the indexed DB is set up
     if (dbPromise) {

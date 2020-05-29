@@ -2,6 +2,7 @@
  * Handles AJAX requests and initialisation/basic features of the application.
  */
 
+
 /**
  * called by the HTML onload
  * showing any cached stories and declaring the service worker
@@ -37,25 +38,33 @@ function initStories(displayStories) {
 /**
  * given a list of users, retrieve all the data from the server (or failing that) from the database.
  */
-function loadData(displayStories){
+function loadData(displayStories, username){
+    console.log("refreshing cached users");
     refreshCachedUsers();
-    retrieveAllStoryData(displayStories);
+    console.log("retrieving story data");
+    retrieveAllStoryData(displayStories, username);
 }
 
 /**
  * Cycles through the list of users and requests a story (or stories) from the server for each
  * user.
  */
-function retrieveAllStoryData(displayStories){
+function retrieveAllStoryData(displayStories, username){
+    console.log("loading likes");
 
-    loadLikes(
-        loadStories(function(){
-            if(displayStories) {
-                displayCachedStories();
-            }
-        })
-    );
+    loadLikes(function() {
+            console.log("loading likes complete");
+            console.log("loading stories");
 
+            loadStories(function () {
+                console.log("init stories end");
+                if (displayStories && username == null) {
+                    displayCachedStories();
+                } else if (displayStories && username) {
+                    displayStoriesForUser(username);
+                }
+            })
+        });
 }
 
 /**
@@ -95,7 +104,7 @@ function loadStories(callback){
             // Show the 'offline' alert
             const dvv= document.getElementById('offline_div');
             if (dvv!=null)
-                dvv.style.display='block';
+                    dvv.style.display='block';
         }
     });
 
@@ -103,6 +112,9 @@ function loadStories(callback){
 
 }
 
+/**
+ * Sets the link to the profile in the navbar to the currently logged in account.
+ */
 function initNavbarProfileLink(){
     $(".profileLink").prop("href", "profile/"+JSON.parse(getCurrentUser()).username);
 }
@@ -123,14 +135,15 @@ function loadLikes(callback){
 
             // Clear the cache, then fill it with the newly returned data
             clearCachedLikes(function(){
-                var dataValue = dataR;
-
-                cacheLikes(dataR, callback);
+                cacheLikes(dataR, function(){
+                    console.log("cached likes");
+                    callback();
+                });
             });
 
             //Hide the 'offline' alert, as server request was successful
             if (document.getElementById('offline_div')!=null)
-                document.getElementById('offline_div').style.display='none';
+                    document.getElementById('offline_div').style.display='none';
         },
 
         // If the server request fails, show the cached data instead.
@@ -149,6 +162,9 @@ function loadLikes(callback){
 
 }
 
+/**
+ * Loads the data from the JSON file supplied at /usersStoriesAndRatings.json into the database.
+ */
 function addJsonData(){
 
     getJsonData("/usersStoriesAndRatings.json", function(text){
@@ -172,6 +188,11 @@ function addJsonData(){
 
 }
 
+/**
+ * Gets the data from a file at the given path.
+ * @param path
+ * @param callback
+ */
 function getJsonData(path, callback) {
     console.log("seeting f to file")
     var f = new XMLHttpRequest();
@@ -190,11 +211,18 @@ function getJsonData(path, callback) {
     f.send(null);
 }
 
+/**
+ * Adds a user based on ID from the json file.
+ * @param userId - the id to create a user from.
+ */
 function addUserJson(userId){
     var user = new User(userId, 123)
     addUserId(user);
 }
 
+/**
+ * Sets the sorting method based on the drop down list on the page.
+ */
 function setSortingMethod(){
     var toggle = $('#toggle').val();
     localStorage.setItem('toggle', JSON.stringify(toggle));
@@ -202,12 +230,26 @@ function setSortingMethod(){
     window.location.reload();
 }
 
+/**
+ * Manually sets the sorting method via a string.
+ * @param method - string value representing the sorting method. Either "date" or "recommended"
+ */
+function manualSetSortingMethod(method){
+    localStorage.setItem('toggle', JSON.stringify(method));
+}
+
+/**
+ * Gets the sorting method from the dropdown on the page.
+ */
 function getSortingMethod() {
     var toggle = JSON.parse(localStorage.getItem('toggle'));
     console.log(toggle)
     $('#toggle').val(toggle);
 }
 
+/**
+ * Makes an AJAX request for all users of the system, caching the result in indexed db.
+ */
 function refreshCachedUsers(){
     $.ajax({
         url: '/users_list',
@@ -293,17 +335,11 @@ class User{
     }
 }
 
-/**
- * chekcs if logged in
- */
 function loggedIn(){
     var currentUser=localStorage.getItem('currentUser');
     return !(currentUser==null);
 }
 
-/**
- * redirects if logged in
- */
 function reIfLogged(){
     var pathname = window.location.pathname;
     if (pathname == "/register" || pathname == "/login" || pathname == "/"){
@@ -320,26 +356,16 @@ function reIfLogged(){
 
 }
 
-/**
- * logouts
- */
 function logout(){
     localStorage.removeItem("currentUser");
     window.location.replace("/");
 }
 
-/**
- * gets the current user
- */
 function getCurrentUser(){
     var currentUser = localStorage.getItem('currentUser');
     return currentUser;
 }
 
-
-/**
- * logs user in
- */
 function login() {
     var un = $('#username').val();
     var pw = $('#password').val();
@@ -353,9 +379,6 @@ function login() {
     }
 }
 
-/**
- * registers user
- */
 function register(){
     var un = $('#username').val();
     var pw = $('#password').val();
@@ -363,10 +386,6 @@ function register(){
     addUser(user);
 }
 
-/**
- * adds user to database ajax
- * @param users
- */
 function addUser(user){
     var data = JSON.stringify(user);
     $.ajax({
@@ -387,10 +406,6 @@ function addUser(user){
     });
 }
 
-/**
- * adds user if with id
- * @param user
- */
 function addUserId(user){
     var data = JSON.stringify(user);
     console.log(data);
@@ -412,10 +427,6 @@ function addUserId(user){
     });
 }
 
-/**
- * login in user
- * @param user
- */
 function loginUser(user){
     var data = JSON.stringify(user);
     //console.log("running data" + data);
@@ -426,7 +437,7 @@ function loginUser(user){
         type: 'POST',
         success: function (response) {
             if (response == null){
-                alert("incorrect details");
+               alert("incorrect details");
             }else{
                 window.location.reload();
                 localStorage.setItem('currentUser', JSON.stringify(response));
