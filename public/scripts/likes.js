@@ -248,6 +248,8 @@ function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAvera
     var score = 0; //score for story
 
     var userA = JSON.parse(getCurrentUser()); //current user
+    var userALikes = currentUserLikes;
+    var rA = currentUserAverage;
 
 
     var sumWAU = 0; //sum of All similarities
@@ -289,8 +291,6 @@ function getStoryScore(storyId, users, likes, currentUserLikes, currentUserAvera
 
     }
 
-    var rA = currentUserAverage;
-    var userALikes = currentUserLikes;
     //console.log("RA: " + rA);
 
     // if count not 0
