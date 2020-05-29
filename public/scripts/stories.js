@@ -1,3 +1,5 @@
+let usersCache = [];
+
 /**
  * Creates a card on the page with the input data
  * @param storyData - data about the story
@@ -16,7 +18,7 @@ function createStoryCard(storyData) {
 
     console.log("Getting user id");
 
-    getUserById(storyData.user_id, function(user){
+    getUserFromRamCache(storyData.user_id, function(user){
         // Create a story card, and add it to the container
         const storyCard = document.createElement("div");
         storyCard.id = "story"+storyData._id;
@@ -89,7 +91,7 @@ function createLikeSummaryIcons(storyData, likes){
  * @param userID - the ID string of the user which created the like.
  */
 function createLikeSummaryIcon(container, like, userID){
-    getUserById(userID, function(user){
+    getUserFromRamCache(userID, function(user){
         console.log("getting user ID");
         container.append("<a href=\"/profile/"+user.username+"\"><button class=\"likesummary btn btn-secondary\" data-placement=\"bottom\" data-toggle=\"tooltip\" title=\""+user.username+"\"><p>"+like.rating+"</p></button></a>");
         $('[data-toggle="tooltip"]').tooltip();
@@ -336,6 +338,31 @@ function displayCachedStories() {
         displayStories(results);
     });
 }
+
+/**
+ * Finds a user in the 'usersCache' variable, or from indexed DB if it has not been cached. Faster for large data sets.
+ * @param userID
+ */
+function getUserFromRamCache(userID, callback){
+    for(var user of usersCache){
+        if(user._id == userID){
+            console.log("Found user in ram cache");
+            return callback(user);
+        }
+    }
+
+    getUserById(userID, function(result) {
+        if(result != null){
+            usersCache.push(result);
+        } else {
+            return;
+        }
+
+        return callback(result);
+    });
+}
+
+
 
 $().button('toggle')
 
