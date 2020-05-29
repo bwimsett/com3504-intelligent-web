@@ -66,7 +66,7 @@ exports.insertId = function (req, res) {
         var options = {upsert: true, new: true, useFindAndModify: false};
 
         // Save the story to the database
-        story.findOneAndUpdate(query, like, options,function (err, results) {
+        Story.findOneAndUpdate(query, story, options,function (err, results) {
             console.log(results._id);
             if (err)
                 res.status(500).send('Invalid data!');

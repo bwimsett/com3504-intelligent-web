@@ -1,3 +1,5 @@
+let usersCache = [];
+
 /**
  * Creates a card on the page with the input data
  * @param storyData - data about the story
@@ -14,13 +16,19 @@ function createStoryCard(storyData) {
     }
     // Await callback to get the user associated with this post
 
-    getUserById(storyData.user_id, function(user){
+    console.log("Getting user id");
+
+    getUserFromRamCache(storyData.user_id, function(user){
         // Create a story card, and add it to the container
         const storyCard = document.createElement("div");
         storyCard.id = "story"+storyData._id;
         storyContainer.appendChild(storyCard);
+        console.log("Getting average for story");
 
-        getDisplayAverageForStory(storyData._id, function(averageRating){
+        getLikesByStoryId(storyData._id, function(likes){
+
+            const averageRating = getAverage(likes);
+
             // Set HTML
             storyCard.innerHTML =
                 "<div class=\"card storyCard\">" +
@@ -48,15 +56,15 @@ function createStoryCard(storyData) {
 
             var currentUser = JSON.parse(getCurrentUser());
 
-            createLikeSummaryIcons(storyData);
+            createLikeSummaryIcons(storyData, likes);
 
-            getLikeByStoryAndUser(storyData._id, currentUser._id, function(like){
-                if(!like){
-                    return;
+            console.log("Getting likes by story and user");
+
+            for(var like of likes) {
+                if (like.user_id == currentUser._id) {
+                    highlightLikeButton(storyData._id, like.rating);
                 }
-
-                highlightLikeButton(storyData._id, like.rating);
-            });
+            }
         });
     });
 }
@@ -65,8 +73,8 @@ function createStoryCard(storyData) {
  * Generates HTML for the like summary icons displayed beneath the like selection buttons
  * @param storyData - The story for which icons will be generated.
  */
-function createLikeSummaryIcons(storyData){
-    getLikesByStoryId(storyData._id, function(likes){
+function createLikeSummaryIcons(storyData, likes){
+
         var summaryContainer = $(".likesummary"+storyData._id);
 
         // Create a button for each like
@@ -74,7 +82,6 @@ function createLikeSummaryIcons(storyData){
             // Create blank tooltip
             createLikeSummaryIcon(summaryContainer, elem, elem.user_id);
         }
-    });
 }
 
 /**
@@ -84,7 +91,8 @@ function createLikeSummaryIcons(storyData){
  * @param userID - the ID string of the user which created the like.
  */
 function createLikeSummaryIcon(container, like, userID){
-    getUserById(userID, function(user){
+    getUserFromRamCache(userID, function(user){
+        console.log("getting user ID");
         container.append("<a href=\"/profile/"+user.username+"\"><button class=\"likesummary btn btn-secondary\" data-placement=\"bottom\" data-toggle=\"tooltip\" title=\""+user.username+"\"><p>"+like.rating+"</p></button></a>");
         $('[data-toggle="tooltip"]').tooltip();
     })
@@ -330,6 +338,31 @@ function displayCachedStories() {
         displayStories(results);
     });
 }
+
+/**
+ * Finds a user in the 'usersCache' variable, or from indexed DB if it has not been cached. Faster for large data sets.
+ * @param userID
+ */
+function getUserFromRamCache(userID, callback){
+    for(var user of usersCache){
+        if(user._id == userID){
+            console.log("Found user in ram cache");
+            return callback(user);
+        }
+    }
+
+    getUserById(userID, function(result) {
+        if(result != null){
+            usersCache.push(result);
+        } else {
+            return;
+        }
+
+        return callback(result);
+    });
+}
+
+
 
 $().button('toggle')
 
